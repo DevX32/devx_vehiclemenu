@@ -16,4 +16,4 @@
 - Hazards And Indicators
 - HandBrake
 ## For Support
- - `DevX32` [Join Discord](https://discord.gg/pwZztPt3cs)
+- [Join Discord](https://discord.gg/pwZztPt3cs)
