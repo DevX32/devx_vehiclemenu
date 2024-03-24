@@ -15,3 +15,5 @@
 # `Arrow Keys Is Used To Control`
 - Hazards And Indicators
 - HandBrake
+## For Support
+ - `DevX32` [Join Discord](https://discord.gg/pwZztPt3cs)
