@@ -282,3 +282,13 @@ CreateThread(function()
 end)
 
 RegisterNUICallback('VehicleMenu', handleVehicleMenu)
+
+RegisterNetEvent('devx_vehiclemenu')
+AddEventHandler('devx_vehiclemenu', function()
+    if not nuiActive then
+        nuiActive = true
+        SetNuiFocus(true, true)
+        SetNuiFocusKeepInput(true)
+        showNUIMode()
+    end
+end)
