@@ -7,7 +7,7 @@
 ## Installation Steps
 - Drag And Drop
 ## Event
-- TriggerEvent('devx_vehiclemenu)
+- TriggerEvent('devx_vehiclemenu')
 
 ## Features
 - Seats Control
