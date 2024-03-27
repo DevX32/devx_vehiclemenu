@@ -6,7 +6,7 @@
 
 ## Installation Steps
 - Drag And Drop
-## Event
+## Events And Exports
 - TriggerEvent('devx_vehiclemenu')
 
 ## Features
