@@ -204,6 +204,48 @@ toggleHandbrake = function()
     SetVehicleHandbrake(vehicle, handbrakeEngaged)
 end
 
+toggleNui = function()
+    nuiActive = true
+    SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(true)
+    showNUIMode()
+end
+
+resetNui = function()
+    nuiActive = false
+    DisableMouse = false
+    showNUIMode()
+end
+
+disableControls = function()
+    DisableControlAction(0, 1, true)
+    DisableControlAction(0, 2, true)
+    DisableControlAction(0, 106, true)
+end
+
+handleSeatsUI = function()
+    if IsControlJustPressed(0, 25) then
+        seatsUI = true
+        showSeatsUI()
+    elseif IsControlJustReleased(0, 25) then
+        seatsUI = false
+    end
+end
+
+handleControls = function()
+    if IsControlJustPressed(0, 172) then
+        toggleHazardLights()
+    elseif IsControlJustPressed(0, 175) then
+        toggleIndicatorLights(0)
+    elseif IsControlJustPressed(0, 174) then
+        toggleIndicatorLights(1)
+    elseif IsControlPressed(0, 173) then
+        toggleHandbrake()
+    elseif IsControlJustPressed(0, 322) and nuiActive then
+        ResetNui()
+    end
+end
+
 handleVehicleMenu = function(data, cb)
     local actions = {
         boot = function() closeVehicleDoor(5) end,
@@ -233,42 +275,18 @@ end
 CreateThread(function()
     while true do
         if IsControlJustPressed(0, keyBind) then
-            nuiActive = true
-            SetNuiFocus(true, true)
-            SetNuiFocusKeepInput(true)
-            showNUIMode()
+            toggleNui()
         end
         if IsControlJustReleased(0, keyBind) then
-            nuiActive = false
-            DisableMouse = false
-            showNUIMode()
+            resetNui()
         end
         if DisableMouse then
-            DisableControlAction(0, 1, true)
-            DisableControlAction(0, 2, true)
-            DisableControlAction(0, 106, true)
+            disableControls()
         end
         if nuiActive then
-            if IsControlJustPressed(0, 25) then
-                seatsUI = true
-                showSeatsUI()
-            end
-            if IsControlJustReleased(0, 25) then
-                seatsUI = false
-            end
+            handleSeatsUI()
         end
-        if IsControlJustPressed(0, 172) then
-            toggleHazardLights()
-        end
-        if IsControlJustPressed(0, 175) then
-            toggleIndicatorLights(0)
-        end
-        if IsControlJustPressed(0, 174) then
-            toggleIndicatorLights(1)
-        end
-        if IsControlPressed(0, 173) then
-            toggleHandbrake()
-        end
+        handleControls()
         Wait(3)
     end
 end)
