@@ -241,8 +241,8 @@ handleControls = function()
         toggleIndicatorLights(1)
     elseif IsControlPressed(0, 173) then
         toggleHandbrake()
-    elseif IsControlJustPressed(0, 322) and nuiActive then
-        ResetNui()
+    elseif IsControlJustPressed(0, 177) and nuiActive then
+        resetNui()
     end
 end
 
