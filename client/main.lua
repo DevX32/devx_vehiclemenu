@@ -73,7 +73,7 @@ showNUIMode = function()
                     end
                 end
                 if isEngineRunning then
-                    for windowIndex = 0, 3 do
+                    for windowIndex = 1, 4 do
                         local windowPos = GetWorldPositionOfEntityBone(vehicle, windowBones[windowIndex])
                         if windowPos then
                             drawHTML(windowPos, getVehiclePartIcon('window_' .. windowIndex), 'window_' .. windowIndex)
