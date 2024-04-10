@@ -31,10 +31,10 @@ local vehicleSeats = {
 }
 
 local windowBones = {
-    GetEntityBoneIndexByName(vehicle, "window_lf"),
-    GetEntityBoneIndexByName(vehicle, "window_rf"),
-    GetEntityBoneIndexByName(vehicle, "window_lr"),
-    GetEntityBoneIndexByName(vehicle, "window_rr")
+    GetEntityBoneIndexByName(vehicle, 'window_lf'),
+    GetEntityBoneIndexByName(vehicle, 'window_rf'),
+    GetEntityBoneIndexByName(vehicle, 'window_lr'),
+    GetEntityBoneIndexByName(vehicle, 'window_rr')
 }
 
 local keyBind = Configuration.keyBind
@@ -135,13 +135,16 @@ end
 toggleWindow = function(windowIndex)
     local vehicle = GetVehiclePedIsIn(PlayerPedId())
     if IsPedSittingInAnyVehicle(PlayerPedId()) then
-        local windowState = IsVehicleWindowIntact(vehicle, windowIndex)
-        if windowState then
-            RollDownWindow(vehicle, windowIndex)
-            PlaySoundFrontend(-1, 'WINDOW_ROLL_DOWN', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
-        else
-            RollUpWindow(vehicle, windowIndex)
-            PlaySoundFrontend(-1, 'WINDOW_ROLL_UP', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
+        local windowBone = windowBones[windowIndex + 1]
+        if windowBone then
+            local windowState = IsVehicleWindowIntact(vehicle, windowBone)
+            if windowState then
+                RollDownWindow(vehicle, windowBone)
+                PlaySoundFrontend(-1, 'WINDOW_ROLL_DOWN', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
+            else
+                RollUpWindow(vehicle, windowBone)
+                PlaySoundFrontend(-1, 'WINDOW_ROLL_UP', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
+            end
         end
     end
 end
@@ -241,8 +244,13 @@ handleControls = function()
         toggleIndicatorLights(1)
     elseif IsControlPressed(0, 173) then
         toggleHandbrake()
-    elseif IsControlJustPressed(0, 177) and nuiActive then
+    elseif IsControlJustPressed(0, 322) and nuiActive then
         resetNui()
+    elseif IsControlJustPressed(0, 25) then
+        if nuiActive then
+            seatsUI = true
+            showSeatsUI()
+        end
     end
 end
 
