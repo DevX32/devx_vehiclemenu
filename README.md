@@ -8,6 +8,8 @@
 - Drag And Drop
 ## Events And Exports
 - TriggerEvent('devx_vehiclemenu')
+# Control
+- Home Button
 
 ## Features
 - Seats Control
@@ -15,8 +17,9 @@
 - Windows Control (Unfinished)
 - Engine Control
 - Interior Light Control
+  
 # `Arrow Keys Is Used To Control`
 - Hazards And Indicators
-- HandBrake
+
 ## For Support
 - [Join Discord](https://discord.gg/pwZztPt3cs)
