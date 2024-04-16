@@ -40,8 +40,12 @@ local windowBones = {
 local keyBind = Configuration.keyBind
 local nuiActive = false
 
-getVehiclePartIcon = function(partName)
-    return vehicleParts[partName] or ""
+getVehiclePartIcon = function(partName, isEngineRunning)
+    local icon = vehicleParts[partName] or ''
+    if partName == 'engine' and isEngineRunning then
+        icon = '<span style="color: cyan;">' .. icon .. '</span>'
+    end
+    return icon
 end
 
 drawHTML = function(coords, text, id)
@@ -68,7 +72,7 @@ showNUIMode = function()
                         local pos = GetWorldPositionOfEntityBone(vehicle, part)
                         if #(GetEntityCoords(vehicle) - pos) < 10 and GetEntityCoords(vehicle) ~= pos then
                             DisableMouse = true
-                            drawHTML(pos, getVehiclePartIcon(k), k)
+                            drawHTML(pos, getVehiclePartIcon(k, isEngineRunning), k)
                         end
                     end
                 end
@@ -277,7 +281,7 @@ handleVehicleMenu = function(data, cb)
     if action then
         action()
     end
-    cb('ok')
+    cb('devx32')
 end
 
 CreateThread(function()
@@ -295,15 +299,13 @@ CreateThread(function()
             handleSeatsUI()
         end
         handleControls()
-        Wait(3)
-    end
-end)
-
-CreateThread(function()
-    while true do
         vehicle = GetVehiclePedIsIn(cache.ped)
-        isEngineRunning = GetIsVehicleEngineRunning(vehicle)
-        Wait(500)
+        if vehicle ~= 0 then
+            isEngineRunning = GetIsVehicleEngineRunning(vehicle)
+        else
+            isEngineRunning = false
+        end
+        Wait(3)
     end
 end)
 
