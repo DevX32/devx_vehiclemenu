@@ -59,8 +59,8 @@ end
 showNUIMode = function()
     CreateThread(function()
         while nuiActive and not seatsUI do
-            local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
-            if vehicle ~= 0 and IsPedInAnyVehicle(PlayerPedId(), false) then
+            local vehicle = GetVehiclePedIsIn(cache.ped, false)
+            if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
                 local isEngineRunning = GetIsVehicleEngineRunning(vehicle)
                 for k, v in pairs(vehicleParts) do
                     local part = GetEntityBoneIndexByName(vehicle, k)
@@ -97,9 +97,9 @@ end
 showSeatsUI = function()
     SendNUIMessage({ action = 'close' })
     CreateThread(function()
-        local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
+        local vehicle = GetVehiclePedIsIn(cache.ped, false)
         while nuiActive and vehicle ~= 0 do
-            if IsPedInAnyVehicle(PlayerPedId(), false) then
+            if IsPedInAnyVehicle(cache.ped, false) then
                 for k, v in pairs(vehicleSeats) do
                     local part = GetEntityBoneIndexByName(vehicle, k)
                     local pos = GetWorldPositionOfEntityBone(vehicle, part)
@@ -121,7 +121,7 @@ showSeatsUI = function()
 end
 
 closeVehicleDoor = function(part)
-    if IsPedSittingInAnyVehicle(PlayerPedId()) then
+    if IsPedSittingInAnyVehicle(cache.ped) then
         if GetVehicleDoorAngleRatio(vehicle, part) > 0.0 then
             SetVehicleDoorShut(vehicle, part, false)
             PlaySoundFrontend(-1, 'CLOSED', 'MP_RADIO_SFX', false)
@@ -133,16 +133,17 @@ closeVehicleDoor = function(part)
 end
 
 toggleWindow = function(windowIndex)
-    local vehicle = GetVehiclePedIsIn(PlayerPedId())
-    if IsPedSittingInAnyVehicle(PlayerPedId()) then
+    local vehicle = GetVehiclePedIsIn(cache.ped)
+    if not IsPedSittingInAnyVehicle(cache.ped) then return end
+    if windowIndex >= 0 and windowIndex <= 3 then
         local windowBone = windowBones[windowIndex + 1]
         if windowBone then
             local windowState = IsVehicleWindowIntact(vehicle, windowBone)
             if windowState then
-                RollDownWindow(vehicle, windowBone)
+                RollDownWindow(vehicle, windowIndex)
                 PlaySoundFrontend(-1, 'WINDOW_ROLL_DOWN', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
             else
-                RollUpWindow(vehicle, windowBone)
+                RollUpWindow(vehicle, windowIndex)
                 PlaySoundFrontend(-1, 'WINDOW_ROLL_UP', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
             end
         end
@@ -150,12 +151,18 @@ toggleWindow = function(windowIndex)
 end
 
 switchSeats = function(seatIndex)
-    local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
-    if vehicle == 0 then return end
+    local vehicle = cache.vehicle or defaultValues.vehicle
+    if vehicle == false then return end
+    local currentSeat = GetPedInVehicleSeat(vehicle, -1)
+    if currentSeat == seatIndex then return end
     local vehicleSpeed = GetEntitySpeed(vehicle) * 3.6
-    local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndex)
-    if vehicleSpeed > 100.0 or isSeatOccupied then return end
-    SetPedIntoVehicle(PlayerPedId(), vehicle, seatIndex)
+    if vehicleSpeed < 1.0 then
+        local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndex)
+        if not isSeatOccupied then
+            SetPedConfigFlag(cache.ped, 184, true)
+            SetPedIntoVehicle(cache.ped, vehicle, seatIndex)
+        end
+    end
 end
 
 toggleEngine = function()
@@ -202,11 +209,6 @@ toggleIndicatorLights = function(indicatorType)
     end
 end
 
-toggleHandbrake = function()
-    handbrakeEngaged = not handbrakeEngaged
-    SetVehicleHandbrake(vehicle, handbrakeEngaged)
-end
-
 toggleNui = function()
     nuiActive = true
     SetNuiFocus(true, true)
@@ -242,8 +244,6 @@ handleControls = function()
         toggleIndicatorLights(0)
     elseif IsControlJustPressed(0, 174) then
         toggleIndicatorLights(1)
-    elseif IsControlPressed(0, 173) then
-        toggleHandbrake()
     elseif IsControlJustPressed(0, 322) and nuiActive then
         resetNui()
     elseif IsControlJustPressed(0, 25) then
@@ -301,7 +301,7 @@ end)
 
 CreateThread(function()
     while true do
-        vehicle = GetVehiclePedIsIn(PlayerPedId())
+        vehicle = GetVehiclePedIsIn(cache.ped)
         isEngineRunning = GetIsVehicleEngineRunning(vehicle)
         Wait(500)
     end
