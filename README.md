@@ -14,7 +14,7 @@
 ## Features
 - Seats Control
 - Doors Control
-- Windows Control (Unfinished)
+- Windows Control
 - Engine Control
 - Interior Light Control
   

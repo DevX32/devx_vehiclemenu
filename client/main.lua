@@ -1,49 +1,53 @@
-local Configuration = require('shared.config')
+local config = require('shared.config')
 
-iconHTML = function(source, classes)
-    return string.format('<img class="%s" src="%s"/>', classes, source)
+iconHTML = function(source, classes, style)
+    local styleAttr = style and string.format(' style="%s"', style) or ''
+    return string.format('<img class="%s" src="%s"%s/>', classes, source, styleAttr)
 end
 
-faIconHTML = function(iconClass)
-    return string.format('<i class="%s icon"></i>', iconClass)
+faIconHTML = function(iconClass, style)
+    local styleAttr = style and string.format(' style="%s"', style) or ''
+    return string.format('<i class="%s icon"%s></i>', iconClass, styleAttr)
 end
 
 local vehicleParts = {
-    bonnet = faIconHTML('fas fa-car'),
-    boot = iconHTML('icons/boot.png', 'icon'),
-    handle_dside_f = iconHTML('icons/door.png', 'icon'),
-    handle_dside_r = iconHTML('icons/door.png', 'icon'),
-    handle_pside_f = iconHTML('icons/door.png', 'icon'),
-    handle_pside_r = iconHTML('icons/door.png', 'icon'),
+    bonnet = iconHTML('icons/boot.webp', 'icon'),
+    boot = iconHTML('icons/boot.webp', 'icon', 'transform: scale(-1, 1)'),
+    handle_dside_f = iconHTML('icons/door.webp', 'icon'),
+    handle_dside_r = iconHTML('icons/door.webp', 'icon'),
+    handle_pside_f = iconHTML('icons/door.webp', 'icon'),
+    handle_pside_r = iconHTML('icons/door.webp', 'icon'),
     engine = faIconHTML('fas fa-cogs'),
     interiorLight = faIconHTML('far fa-lightbulb'),
-    window_driver = faIconHTML('fas fa-car-side'),
-    window_passenger = faIconHTML('fas fa-car-side'),
-    window_rear_left = faIconHTML('fas fa-car-side'),
-    window_rear_right = faIconHTML('fas fa-car-side'),
+    window_driver = faIconHTML('fas fa-sort'),
+    window_passenger = faIconHTML('fas fa-sort'),
+    window_rear_left = faIconHTML('fas fa-sort'),
+    window_rear_right = faIconHTML('fas fa-sort'),
 }
 
 local vehicleSeats = {
-    seat_dside_f = iconHTML('icons/seat.png', 'icon'),
-    seat_dside_r = iconHTML('icons/seat.png', 'icon'),
-    seat_pside_f = iconHTML('icons/seat.png', 'icon'),
-    seat_pside_r = iconHTML('icons/seat.png', 'icon')
+    seat_dside_f = iconHTML('icons/seat.webp', 'icon'),
+    seat_dside_r = iconHTML('icons/seat.webp', 'icon'),
+    seat_pside_f = iconHTML('icons/seat.webp', 'icon'),
+    seat_pside_r = iconHTML('icons/seat.webp', 'icon')
 }
 
 local windowBones = {
-    GetEntityBoneIndexByName(vehicle, 'window_lf'),
-    GetEntityBoneIndexByName(vehicle, 'window_rf'),
-    GetEntityBoneIndexByName(vehicle, 'window_lr'),
-    GetEntityBoneIndexByName(vehicle, 'window_rr')
+    window_driver = 'window_lf',
+    window_passenger = 'window_rf',
+    window_rear_left = 'window_lr',
+    window_rear_right = 'window_rr'
 }
 
-local keyBind = Configuration.keyBind
+local keyBind = config.keyBind
 local nuiActive = false
 
 getVehiclePartIcon = function(partName, isEngineRunning)
     local icon = vehicleParts[partName] or ''
-    if partName == 'engine' and isEngineRunning then
-        icon = '<span style="color: cyan;">' .. icon .. '</span>'
+    if partName:sub(1, 6) == 'window' then
+        icon = '<span style="color: white;">' .. icon .. '</span>'
+    elseif partName == 'engine' and isEngineRunning then
+        icon = '<span style="color: gray;">' .. icon .. '</span>'
     end
     return icon
 end
@@ -66,21 +70,24 @@ showNUIMode = function()
             local vehicle = GetVehiclePedIsIn(cache.ped, false)
             if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
                 local isEngineRunning = GetIsVehicleEngineRunning(vehicle)
-                for k, v in pairs(vehicleParts) do
-                    local part = GetEntityBoneIndexByName(vehicle, k)
+                for partName, v in pairs(vehicleParts) do
+                    local part = GetEntityBoneIndexByName(vehicle, partName)
                     if part ~= -1 then
                         local pos = GetWorldPositionOfEntityBone(vehicle, part)
                         if #(GetEntityCoords(vehicle) - pos) < 10 and GetEntityCoords(vehicle) ~= pos then
                             DisableMouse = true
-                            drawHTML(pos, getVehiclePartIcon(k, isEngineRunning), k)
+                            drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
                         end
                     end
                 end
                 if isEngineRunning then
-                    for windowIndex = 1, 4 do
-                        local windowPos = GetWorldPositionOfEntityBone(vehicle, windowBones[windowIndex])
-                        if windowPos then
-                            drawHTML(windowPos, getVehiclePartIcon('window_' .. windowIndex), 'window_' .. windowIndex)
+                    for partName, boneName in pairs(windowBones) do
+                        local part = GetEntityBoneIndexByName(vehicle, boneName)
+                        if part ~= -1 then
+                            local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                            if pos then
+                                drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
+                            end
                         end
                     end
                 end
@@ -128,10 +135,8 @@ closeVehicleDoor = function(part)
     if IsPedSittingInAnyVehicle(cache.ped) then
         if GetVehicleDoorAngleRatio(vehicle, part) > 0.0 then
             SetVehicleDoorShut(vehicle, part, false)
-            PlaySoundFrontend(-1, 'CLOSED', 'MP_RADIO_SFX', false)
         else
             SetVehicleDoorOpen(vehicle, part, false)
-            PlaySoundFrontend(-1, 'OPENED', 'MP_RADIO_SFX', false)
         end
     end
 end
@@ -139,24 +144,23 @@ end
 toggleWindow = function(windowIndex)
     local vehicle = GetVehiclePedIsIn(cache.ped)
     if not IsPedSittingInAnyVehicle(cache.ped) then return end
+    local windowBones = {0, 1, 2, 3 }
     if windowIndex >= 0 and windowIndex <= 3 then
         local windowBone = windowBones[windowIndex + 1]
         if windowBone then
             local windowState = IsVehicleWindowIntact(vehicle, windowBone)
             if windowState then
-                RollDownWindow(vehicle, windowIndex)
-                PlaySoundFrontend(-1, 'WINDOW_ROLL_DOWN', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
+                RollDownWindow(vehicle, windowBone)
             else
-                RollUpWindow(vehicle, windowIndex)
-                PlaySoundFrontend(-1, 'WINDOW_ROLL_UP', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
+                RollUpWindow(vehicle, windowBone)
             end
         end
     end
 end
 
 switchSeats = function(seatIndex)
-    local vehicle = cache.vehicle or defaultValues.vehicle
-    if vehicle == false then return end
+    local vehicle = cache.vehicle
+    if not vehicle then return end
     local currentSeat = GetPedInVehicleSeat(vehicle, -1)
     if currentSeat == seatIndex then return end
     local vehicleSpeed = GetEntitySpeed(vehicle) * 3.6
