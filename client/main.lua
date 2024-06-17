@@ -45,9 +45,9 @@ local nuiActive = false
 getVehiclePartIcon = function(partName, isEngineRunning)
     local icon = vehicleParts[partName] or ''
     if partName:sub(1, 6) == 'window' then
-        icon = '<span style="color: white;">' .. icon .. '</span>'
+        icon = '<span style="color: #FFFFFF;">' .. icon .. '</span>'
     elseif partName == 'engine' and isEngineRunning then
-        icon = '<span style="color: gray;">' .. icon .. '</span>'
+        icon = '<span style="color: #6FEEE7;">' .. icon .. '</span>'
     end
     return icon
 end
