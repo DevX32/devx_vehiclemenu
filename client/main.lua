@@ -315,8 +315,7 @@ end)
 
 RegisterNUICallback('VehicleMenu', handleVehicleMenu)
 
-RegisterNetEvent('devx_vehiclemenu')
-AddEventHandler('devx_vehiclemenu', function()
+RegisterNetEvent('devx_vehiclemenu', function()
     if not nuiActive then
         nuiActive = true
         SetNuiFocus(true, true)
