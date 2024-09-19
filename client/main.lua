@@ -44,12 +44,13 @@ local nuiActive = false
 
 getVehiclePartIcon = function(partName, isEngineRunning)
     local icon = vehicleParts[partName] or ''
+    local color = '#FFFFFF'
     if partName:sub(1, 6) == 'window' then
-        icon = '<span style="color: #FFFFFF;">' .. icon .. '</span>'
+        color = '#FFFFFF'
     elseif partName == 'engine' and isEngineRunning then
-        icon = '<span style="color: #6FEEE7;">' .. icon .. '</span>'
+        color = '#6FEEE7'
     end
-    return icon
+    return string.format('<span style="color: %s;">%s</span>', color, icon)
 end
 
 drawHTML = function(coords, text, id)
@@ -132,6 +133,7 @@ showSeatsUI = function()
 end
 
 closeVehicleDoor = function(part)
+    local vehicle = GetVehiclePedIsIn(cache.ped, false)
     if IsPedSittingInAnyVehicle(cache.ped) then
         if GetVehicleDoorAngleRatio(vehicle, part) > 0.0 then
             SetVehicleDoorShut(vehicle, part, false)
