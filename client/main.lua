@@ -39,16 +39,21 @@ local windowBones = {
     window_rear_right = 'window_rr'
 }
 
+local colors = {
+    default = '#FFFFFF',
+    running = '#8685ef',
+}
+
 local keyBind = config.keyBind
 local nuiActive = false
 
 getVehiclePartIcon = function(partName, isEngineRunning)
     local icon = vehicleParts[partName] or ''
-    local color = '#FFFFFF'
+    local color = colors.default
     if partName:sub(1, 6) == 'window' then
-        color = '#FFFFFF'
+        color = colors.default
     elseif partName == 'engine' and isEngineRunning then
-        color = '#6FEEE7'
+        color = colors.running
     end
     return string.format('<span style="color: %s;">%s</span>', color, icon)
 end
