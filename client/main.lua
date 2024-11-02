@@ -228,18 +228,26 @@ toggleNui = function()
     nuiActive = true
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(true)
+    DisableMouse = true
     showNUIMode()
 end
 
 resetNui = function()
     nuiActive = false
     DisableMouse = false
+    SetNuiFocus(false, false)
+    SetNuiFocusKeepInput(false)
     showNUIMode()
 end
 
 disableControls = function()
-    DisableControlAction(0, 1, true)
-    DisableControlAction(0, 2, true)
+    if nuiActive then
+        EnableControlAction(0, 1, true)
+        EnableControlAction(0, 2, true)
+    else
+        DisableControlAction(0, 1, true)
+        DisableControlAction(0, 2, true)
+    end
     DisableControlAction(0, 106, true)
 end
 
