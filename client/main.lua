@@ -32,6 +32,13 @@ local vehicleSeats = {
     seat_pside_r = iconHTML('icons/seat.webp', 'icon')
 }
 
+local seatIndexMap = {
+    seat_dside_f = -1,
+    seat_pside_f = 0,
+    seat_dside_r = 1,
+    seat_pside_r = 2
+}
+
 local windowBones = {
     window_driver = 'window_lf',
     window_passenger = 'window_rf',
@@ -146,17 +153,16 @@ toggleWindow = function(windowIndex)
     end
 end
 
-switchSeats = function(seatIndex)
-    local vehicle = cache.vehicle
+switchSeats = function(seatKey)
+    local vehicle = GetVehiclePedIsIn(cache.ped, false)
     if not vehicle then return end
-    local currentSeat = GetPedInVehicleSeat(vehicle, -1)
-    if currentSeat == seatIndex then return end
+    local targetSeat = seatIndexMap[seatKey]
     local vehicleSpeed = GetEntitySpeed(vehicle) * 3.6
     if vehicleSpeed < 1.0 then
-        local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndex)
+        local isSeatOccupied = not IsVehicleSeatFree(vehicle, targetSeat)
         if not isSeatOccupied then
             SetPedConfigFlag(cache.ped, 184, true)
-            SetPedIntoVehicle(cache.ped, vehicle, seatIndex)
+            SetPedIntoVehicle(cache.ped, vehicle, targetSeat)
         end
     end
 end
@@ -274,10 +280,10 @@ handleVehicleMenu = function(data, cb)
         bonnet = function() closeVehicleDoor(4) end,
         engine = toggleEngine,
         interiorLight = toggleInteriorLight,
-        seat_dside_f = function() switchSeats(-1) end,
-        seat_dside_r = function() switchSeats(1) end,
-        seat_pside_f = function() switchSeats(0) end,
-        seat_pside_r = function() switchSeats(2) end,
+        seat_dside_f = function() switchSeats('seat_dside_f') end,
+        seat_dside_r = function() switchSeats('seat_dside_r') end,
+        seat_pside_f = function() switchSeats('seat_pside_f') end,
+        seat_pside_r = function() switchSeats('seat_pside_r') end,
         window_driver = function() toggleWindow(0) end,
         window_passenger = function() toggleWindow(1) end,
         window_rear_left = function() toggleWindow(2) end,
