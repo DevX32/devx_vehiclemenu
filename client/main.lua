@@ -44,15 +44,13 @@ local colors = {
     running = '#8685ef',
 }
 
-local keyBind = config.keyBind
 local nuiActive = false
+local seatsUI = false
 
 getVehiclePartIcon = function(partName, isEngineRunning)
     local icon = vehicleParts[partName] or ''
     local color = colors.default
-    if partName:sub(1, 6) == 'window' then
-        color = colors.default
-    elseif partName == 'engine' and isEngineRunning then
+    if partName == 'engine' and isEngineRunning then
         color = colors.running
     end
     return string.format('<span style="color: %s;">%s</span>', color, icon)
@@ -76,12 +74,11 @@ showNUIMode = function()
             local vehicle = GetVehiclePedIsIn(cache.ped, false)
             if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
                 local isEngineRunning = GetIsVehicleEngineRunning(vehicle)
-                for partName, v in pairs(vehicleParts) do
+                for partName, _ in pairs(vehicleParts) do
                     local part = GetEntityBoneIndexByName(vehicle, partName)
                     if part ~= -1 then
                         local pos = GetWorldPositionOfEntityBone(vehicle, part)
                         if #(GetEntityCoords(vehicle) - pos) < 10 and GetEntityCoords(vehicle) ~= pos then
-                            DisableMouse = true
                             drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
                         end
                     end
@@ -91,21 +88,17 @@ showNUIMode = function()
                         local part = GetEntityBoneIndexByName(vehicle, boneName)
                         if part ~= -1 then
                             local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                            if pos then
-                                drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
-                            end
+                            drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
                         end
                     end
                 end
             else
-                DisableMouse = false
                 nuiActive = false
             end
             Wait(25)
         end
         if not seatsUI then
             SetNuiFocus(false, false)
-            SetNuiFocusKeepInput(false)
             SendNUIMessage({ action = 'close' })
         end
     end)
@@ -121,47 +114,35 @@ showSeatsUI = function()
                     local part = GetEntityBoneIndexByName(vehicle, k)
                     local pos = GetWorldPositionOfEntityBone(vehicle, part)
                     if part ~= -1 and #(GetEntityCoords(vehicle) - pos) < 10 and GetEntityCoords(vehicle) ~= pos then
-                        DisableMouse = true
                         drawHTML(pos, v, k)
                     end
                 end
             else
-                DisableMouse = false
                 nuiActive = false
             end
             Wait(25)
         end
         SetNuiFocus(false, false)
-        SetNuiFocusKeepInput(false)
         SendNUIMessage({ action = 'close' })
     end)
 end
 
 closeVehicleDoor = function(part)
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
-    if IsPedSittingInAnyVehicle(cache.ped) then
-        if GetVehicleDoorAngleRatio(vehicle, part) > 0.0 then
-            SetVehicleDoorShut(vehicle, part, false)
-        else
-            SetVehicleDoorOpen(vehicle, part, false)
-        end
+    if GetVehicleDoorAngleRatio(vehicle, part) > 0.0 then
+        SetVehicleDoorShut(vehicle, part, false)
+    else
+        SetVehicleDoorOpen(vehicle, part, false)
     end
 end
 
 toggleWindow = function(windowIndex)
     local vehicle = GetVehiclePedIsIn(cache.ped)
-    if not IsPedSittingInAnyVehicle(cache.ped) then return end
-    local windowBones = {0, 1, 2, 3 }
-    if windowIndex >= 0 and windowIndex <= 3 then
-        local windowBone = windowBones[windowIndex + 1]
-        if windowBone then
-            local windowState = IsVehicleWindowIntact(vehicle, windowBone)
-            if windowState then
-                RollDownWindow(vehicle, windowBone)
-            else
-                RollUpWindow(vehicle, windowBone)
-            end
-        end
+    local windowState = IsVehicleWindowIntact(vehicle, windowIndex)
+    if windowState then
+        RollDownWindow(vehicle, windowIndex)
+    else
+        RollUpWindow(vehicle, windowIndex)
     end
 end
 
@@ -181,46 +162,30 @@ switchSeats = function(seatIndex)
 end
 
 toggleEngine = function()
-    active = not active
-    SetVehicleEngineOn(vehicle, active, false, true)
+    local vehicle = GetVehiclePedIsIn(cache.ped)
+    local isRunning = GetIsVehicleEngineRunning(vehicle)
+    SetVehicleEngineOn(vehicle, not isRunning, false, true)
 end
 
 toggleInteriorLight = function()
-    active = not active
-    SetVehicleInteriorlight(vehicle, active)
-    PlaySoundFrontend(-1, 'Toggle_Lights', 'PI_Menu_Sounds', false)
+    local vehicle = GetVehiclePedIsIn(cache.ped)
+    local isLightOn = GetVehicleInteriorlight(vehicle)
+    SetVehicleInteriorlight(vehicle, not isLightOn)
 end
 
 toggleHazardLights = function()
-    hazardLightsActive = not hazardLightsActive
+    local vehicle = GetVehiclePedIsIn(cache.ped)
+    local hazardLightsActive = not IsVehicleIndicatorLightsOn(vehicle, 0) and not IsVehicleIndicatorLightsOn(vehicle, 1)
     SetVehicleIndicatorLights(vehicle, 0, hazardLightsActive)
     SetVehicleIndicatorLights(vehicle, 1, hazardLightsActive)
-    if hazardLightsActive then
-        PlaySoundFrontend(-1, 'Indicator', 'HUD_LIghts_Indicator', false)
-    else
-        StopSound(-1, 'Indicator')
-    end
 end
 
 toggleIndicatorLights = function(indicatorType)
+    local vehicle = GetVehiclePedIsIn(cache.ped)
     if indicatorType == 0 then
-        leftIndicatorActive = not leftIndicatorActive
-        SetVehicleIndicatorLights(vehicle, 0, leftIndicatorActive)
-        if leftIndicatorActive then
-            rightIndicatorActive = false
-            PlaySoundFrontend(-1, 'Indicator', 'HUD_LIghts_Indicator', false)
-        else
-            StopSound(-1, 'Indicator')
-        end
+        SetVehicleIndicatorLights(vehicle, 0, not IsVehicleIndicatorLightsOn(vehicle, 0))
     elseif indicatorType == 1 then
-        rightIndicatorActive = not rightIndicatorActive
-        SetVehicleIndicatorLights(vehicle, 1, rightIndicatorActive)
-        if rightIndicatorActive then
-            leftIndicatorActive = false
-            PlaySoundFrontend(-1, 'Indicator', 'HUD_LIghts_Indicator', false)
-        else
-            StopSound(-1, 'Indicator')
-        end
+        SetVehicleIndicatorLights(vehicle, 1, not IsVehicleIndicatorLightsOn(vehicle, 1))
     end
 end
 
@@ -228,17 +193,39 @@ toggleNui = function()
     nuiActive = true
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(true)
-    DisableMouse = true
     showNUIMode()
 end
 
 resetNui = function()
     nuiActive = false
-    DisableMouse = false
     SetNuiFocus(false, false)
-    SetNuiFocusKeepInput(false)
-    showNUIMode()
+    SendNUIMessage({ action = 'close' })
 end
+
+RegisterKeyMapping('toggle_vehicle_menu', 'Toggle Vehicle Menu', 'keyboard', 'F5')
+RegisterKeyMapping('toggle_hazard_lights', 'Toggle Hazard Lights', 'keyboard', 'UP')
+RegisterKeyMapping('toggle_left_indicator', 'Toggle Left Indicator', 'keyboard', 'LEFT')
+RegisterKeyMapping('toggle_right_indicator', 'Toggle Right Indicator', 'keyboard', 'RIGHT')
+RegisterKeyMapping('close_vehicle_menu', 'Close Vehicle Menu', 'keyboard', 'BACK')
+
+RegisterCommand('toggle_vehicle_menu', function()
+    if nuiActive then
+        resetNui()
+    else
+        toggleNui()
+    end
+end, false)
+
+RegisterCommand('toggle_hazard_lights', toggleHazardLights, false)
+RegisterCommand('toggle_left_indicator', function() toggleIndicatorLights(0) end, false)
+RegisterCommand('toggle_right_indicator', function() toggleIndicatorLights(1) end, false)
+RegisterCommand('close_vehicle_menu', resetNui, false)
+
+TriggerEvent('chat:removeSuggestion', 'toggle_hazard_lights')
+TriggerEvent('chat:removeSuggestion', 'toggle_left_indicator')
+TriggerEvent('chat:removeSuggestion', 'toggle_right_indicator')
+TriggerEvent('chat:removeSuggestion', 'close_vehicle_menu')
+TriggerEvent('chat:removeSuggestion', 'toggle_vehicle_menu')
 
 disableControls = function()
     if nuiActive then
@@ -305,12 +292,7 @@ end
 
 CreateThread(function()
     while true do
-        if IsControlJustPressed(0, keyBind) then
-            toggleNui()
-        end
-        if IsControlJustReleased(0, keyBind) then
-            resetNui()
-        end
+        local vehicle = GetVehiclePedIsIn(cache.ped)
         if DisableMouse then
             disableControls()
         end
@@ -318,7 +300,6 @@ CreateThread(function()
             handleSeatsUI()
         end
         handleControls()
-        vehicle = GetVehiclePedIsIn(cache.ped)
         if vehicle ~= 0 then
             isEngineRunning = GetIsVehicleEngineRunning(vehicle)
         else
@@ -332,9 +313,6 @@ RegisterNUICallback('VehicleMenu', handleVehicleMenu)
 
 RegisterNetEvent('devx_vehiclemenu', function()
     if not nuiActive then
-        nuiActive = true
-        SetNuiFocus(true, true)
-        SetNuiFocusKeepInput(true)
-        showNUIMode()
+        toggleNui()
     end
 end)
