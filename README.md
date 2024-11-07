@@ -6,10 +6,12 @@
 
 ## Installation Steps
 - Drag And Drop
+
 ## Events And Exports
 - TriggerEvent('devx_vehiclemenu')
+
 # Control
-- Home Button
+- F5 Button
 
 ## Features
 - Seats Control
