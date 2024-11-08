@@ -1,3 +1,3 @@
 return {
-    keyBind = 212
+    keyBind = 'F5'
 }
