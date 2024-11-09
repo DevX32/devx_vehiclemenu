@@ -9,7 +9,12 @@ function showNUIMode(data) {
     const [xPos, yPos] = validatePosition(data.position);
     if (!$(`#${data.id}`).length) {
         $('body').append(`
-            <p id="${data.id}" class="dynamic-content" style=" left: ${xPos * 100}%; top: ${yPos * 100}%;">
+            <p id="${data.id}" style="					
+                display: none;
+				color: white;
+				position: absolute;
+				left: ${xPos * 100}%; 
+				top: ${yPos * 100}%; ">
                 ${data.html}
             </p>`);
         $(`#${data.id}`).fadeIn(500);
