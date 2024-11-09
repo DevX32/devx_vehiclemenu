@@ -1,4 +1,6 @@
 local config = require('shared.config')
+local leftIndicatorOn = false
+local rightIndicatorOn = false
 
 iconHTML = function(source, classes, style)
     local styleAttr = style and string.format(' style="%s"', style) or ''
@@ -181,17 +183,21 @@ end
 
 toggleHazardLights = function()
     local vehicle = GetVehiclePedIsIn(cache.ped)
-    local hazardLightsActive = not IsVehicleIndicatorLightsOn(vehicle, 0) and not IsVehicleIndicatorLightsOn(vehicle, 1)
-    SetVehicleIndicatorLights(vehicle, 0, hazardLightsActive)
-    SetVehicleIndicatorLights(vehicle, 1, hazardLightsActive)
+    local hazardLightsActive = not (leftIndicatorOn and rightIndicatorOn)
+    leftIndicatorOn = hazardLightsActive
+    rightIndicatorOn = hazardLightsActive
+    SetVehicleIndicatorLights(vehicle, 0, leftIndicatorOn)
+    SetVehicleIndicatorLights(vehicle, 1, rightIndicatorOn)
 end
 
 toggleIndicatorLights = function(indicatorType)
     local vehicle = GetVehiclePedIsIn(cache.ped)
     if indicatorType == 0 then
-        SetVehicleIndicatorLights(vehicle, 0, not IsVehicleIndicatorLightsOn(vehicle, 0))
+        leftIndicatorOn = not leftIndicatorOn
+        SetVehicleIndicatorLights(vehicle, 0, leftIndicatorOn)
     elseif indicatorType == 1 then
-        SetVehicleIndicatorLights(vehicle, 1, not IsVehicleIndicatorLightsOn(vehicle, 1))
+        rightIndicatorOn = not rightIndicatorOn
+        SetVehicleIndicatorLights(vehicle, 1, rightIndicatorOn)
     end
 end
 
