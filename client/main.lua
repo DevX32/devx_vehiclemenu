@@ -219,6 +219,7 @@ RegisterKeyMapping('toggle_hazard_lights', 'Toggle Hazard Lights', 'keyboard', '
 RegisterKeyMapping('toggle_left_indicator', 'Toggle Left Indicator', 'keyboard', 'LEFT')
 RegisterKeyMapping('toggle_right_indicator', 'Toggle Right Indicator', 'keyboard', 'RIGHT')
 RegisterKeyMapping('close_vehicle_menu', 'Close Vehicle Menu', 'keyboard', 'BACK')
+RegisterKeyMapping('close_vehicle_menu', 'Close Vehicle Menu', 'keyboard', 'ESC')
 
 RegisterCommand('toggle_vehicle_menu', function()
     if nuiActive then
