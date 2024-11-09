@@ -259,7 +259,7 @@ handleSeatsUI = function()
     end
 end
 
-handleVehicleMenu = function(data, cb)
+handleVehicleMenu = function(data)
     local actions = {
         boot = function() closeVehicleDoor(5) end,
         handle_dside_f = function() closeVehicleDoor(0) end,
@@ -282,7 +282,6 @@ handleVehicleMenu = function(data, cb)
     if action then
         action()
     end
-    cb('devx32')
 end
 
 CreateThread(function()
