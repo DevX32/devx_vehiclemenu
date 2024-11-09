@@ -229,8 +229,8 @@ RegisterCommand('toggle_vehicle_menu', function()
 end, false)
 
 RegisterCommand('toggle_hazard_lights', toggleHazardLights, false)
-RegisterCommand('toggle_left_indicator', function() toggleIndicatorLights(0) end, false)
-RegisterCommand('toggle_right_indicator', function() toggleIndicatorLights(1) end, false)
+RegisterCommand('toggle_left_indicator', function() toggleIndicatorLights(1) end, false)
+RegisterCommand('toggle_right_indicator', function() toggleIndicatorLights(0) end, false)
 RegisterCommand('close_vehicle_menu', resetNui, false)
 
 TriggerEvent('chat:removeSuggestion', 'toggle_hazard_lights')
@@ -256,23 +256,6 @@ handleSeatsUI = function()
         showSeatsUI()
     elseif IsControlJustReleased(0, 25) then
         seatsUI = false
-    end
-end
-
-handleControls = function()
-    if IsControlJustPressed(0, 172) then
-        toggleHazardLights()
-    elseif IsControlJustPressed(0, 175) then
-        toggleIndicatorLights(0)
-    elseif IsControlJustPressed(0, 174) then
-        toggleIndicatorLights(1)
-    elseif IsControlJustPressed(0, 322) and nuiActive then
-        resetNui()
-    elseif IsControlJustPressed(0, 25) then
-        if nuiActive then
-            seatsUI = true
-            showSeatsUI()
-        end
     end
 end
 
@@ -311,7 +294,6 @@ CreateThread(function()
         if nuiActive then
             handleSeatsUI()
         end
-        handleControls()
         if vehicle ~= 0 then
             isEngineRunning = GetIsVehicleEngineRunning(vehicle)
         else
