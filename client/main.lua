@@ -4,8 +4,10 @@ local rightIndicatorOn = false
 local interiorLightOn = false
 
 iconHTML = function(source, classes, style)
-    local styleAttr = style and string.format(' style="%s"', style) or ''
-    return string.format('<img class="%s" src="%s"%s/>', classes, source, styleAttr)
+    local defaultStyle = "outline:none; border:none; -webkit-user-select:none; user-select:none;"
+    local combinedStyle = style and (defaultStyle .. style) or defaultStyle
+    local styleAttr = string.format(' style="%s"', combinedStyle)
+    return string.format('<img class="%s" src="%s"%s draggable="false"/>', classes, source, styleAttr)
 end
 
 faIconHTML = function(iconClass, style)
