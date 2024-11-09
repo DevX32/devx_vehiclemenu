@@ -1,6 +1,7 @@
 local config = require('shared.config')
 local leftIndicatorOn = false
 local rightIndicatorOn = false
+local interiorLightOn = false
 
 iconHTML = function(source, classes, style)
     local styleAttr = style and string.format(' style="%s"', style) or ''
@@ -177,8 +178,8 @@ end
 
 toggleInteriorLight = function()
     local vehicle = GetVehiclePedIsIn(cache.ped)
-    local isLightOn = GetVehicleInteriorlight(vehicle)
-    SetVehicleInteriorlight(vehicle, not isLightOn)
+    interiorLightOn = not interiorLightOn
+    SetVehicleInteriorlight(vehicle, interiorLightOn)
 end
 
 toggleHazardLights = function()
@@ -219,7 +220,6 @@ RegisterKeyMapping('toggle_hazard_lights', 'Toggle Hazard Lights', 'keyboard', '
 RegisterKeyMapping('toggle_left_indicator', 'Toggle Left Indicator', 'keyboard', 'LEFT')
 RegisterKeyMapping('toggle_right_indicator', 'Toggle Right Indicator', 'keyboard', 'RIGHT')
 RegisterKeyMapping('close_vehicle_menu', 'Close Vehicle Menu', 'keyboard', 'BACK')
-RegisterKeyMapping('close_vehicle_menu', 'Close Vehicle Menu', 'keyboard', 'ESC')
 
 RegisterCommand('toggle_vehicle_menu', function()
     if nuiActive then
@@ -268,8 +268,8 @@ handleVehicleMenu = function(data)
         handle_pside_f = function() closeVehicleDoor(1) end,
         handle_pside_r = function() closeVehicleDoor(3) end,
         bonnet = function() closeVehicleDoor(4) end,
-        engine = toggleEngine,
-        interiorLight = toggleInteriorLight,
+        engine = function() toggleEngine()  end,
+        interiorLight = function() toggleInteriorLight() end,
         seat_dside_f = function() switchSeats('seat_dside_f') end,
         seat_dside_r = function() switchSeats('seat_dside_r') end,
         seat_pside_f = function() switchSeats('seat_pside_f') end,
@@ -293,11 +293,14 @@ CreateThread(function()
         end
         if nuiActive then
             handleSeatsUI()
-        end
-        if vehicle ~= 0 then
-            isEngineRunning = GetIsVehicleEngineRunning(vehicle)
-        else
-            isEngineRunning = false
+            if IsControlJustPressed(0, 322) then
+                resetNui()
+            end
+            if vehicle ~= 0 then
+                isEngineRunning = GetIsVehicleEngineRunning(vehicle)
+            else
+                isEngineRunning = false
+            end
         end
         Wait(3)
     end
