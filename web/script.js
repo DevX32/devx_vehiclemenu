@@ -9,17 +9,20 @@ function showNUIMode(data) {
     const [xPos, yPos] = validatePosition(data.position);
     if (!$(`#${data.id}`).length) {
         $('body').append(`
-            <p id="${data.id}" style="					
+            <p id="${data.id}" style="
                 display: none;
-				color: white;
-				position: absolute;
-				left: ${xPos * 100}%; 
-				top: ${yPos * 100}%; ">
+                color: white;
+                position: absolute;
+                left: ${xPos * 100}vw;
+                top: ${yPos * 100}vh;">
                 ${data.html}
             </p>`);
         $(`#${data.id}`).fadeIn(500);
     } else {
-        $(`#${data.id}`).css({ left: `${xPos * 100}%`, top: `${yPos * 100}%` });
+        $(`#${data.id}`).css({
+            left: `${xPos * 100}vw`, 
+            top: `${yPos * 100}vh` 
+        });
     }
     $(`#${data.id}`).off().click(function () {
         $.post(`http://devx_vehiclemenu/VehicleMenu`, JSON.stringify({
