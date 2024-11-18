@@ -4,15 +4,17 @@ local rightIndicatorOn = false
 local interiorLightOn = false
 
 iconHTML = function(source, classes, style)
-    local defaultStyle = "outline:none; border:none; -webkit-user-select:none; user-select:none;"
+    local defaultStyle = "outline:none; border:none; -webkit-user-select:none; user-select:none; width:1vw; height:2vh;"
     local combinedStyle = style and (defaultStyle .. style) or defaultStyle
-    local styleAttr = string.format(' style="%s"', combinedStyle)
-    return string.format('<img class="%s" src="%s"%s draggable="false"/>', classes, source, styleAttr)
+    local styleAttr = string.format('style="%s"', combinedStyle)
+    return string.format('<img class="%s" src="%s" %s draggable="false"/>', classes, source, styleAttr)
 end
 
 faIconHTML = function(iconClass, style)
-    local styleAttr = style and string.format(' style="%s"', style) or ''
-    return string.format('<i class="%s icon"%s></i>', iconClass, styleAttr)
+    local defaultStyle = "font-size:1.5vh;"
+    local combinedStyle = defaultStyle .. (style or "")
+    local styleAttr = string.format('style="%s"', combinedStyle)
+    return string.format('<i class="%s icon" %s></i>', iconClass, styleAttr)
 end
 
 local vehicleParts = {
