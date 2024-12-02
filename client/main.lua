@@ -249,7 +249,7 @@ RegisterCommand('toggle_vehicle_menu', function()
     end
 end, false)
 
-RegisterCommand('toggle_hazard_lights', indicate("hazards"), false)
+RegisterCommand('toggle_hazard_lights', function() indicate("hazards") end, false)
 RegisterCommand('toggle_left_indicator', function() indicate("left") end, false)
 RegisterCommand('toggle_right_indicator', function() indicate("right") end, false)
 RegisterCommand('close_vehicle_menu', resetNui, false)
