@@ -180,20 +180,27 @@ toggleEngine = function()
     SetVehicleEngineOn(vehicle, not isRunning, false, true)
 end
 
-toggleInteriorLight = function()
-    local vehicle = GetVehiclePedIsIn(cache.ped)
-    local netId = NetworkGetNetworkIdFromEntity(vehicle)
-    TriggerServerEvent('devx_vehiclemenu:server:setstate', netId, not IsVehicleInteriorLightOn(vehicle))
+isInteriorLightOn = function(vehicle)
+    if not Entity(vehicle).state.interiorLight then return false end
+    local state = Entity(vehicle).state.interiorLight
+    return state == true
 end
 
-isIndicating = function(vehicle, type) 
+toggleInteriorLight = function()
+    if not IsPedInAnyVehicle(cache.ped) then return false end
+    local vehicle = GetVehiclePedIsIn(cache.ped)
+    local value = not isInteriorLightOn(vehicle)
+    TriggerServerEvent('devx_vehiclemenu:server:setInteriorLightState', VehToNet(vehicle), value)
+end
+
+isIndicating = function(vehicle, type)
     if not Entity(vehicle).state.indicate then return false end
     local state = Entity(vehicle).state.indicate
     if state[1] and state[2] and type == "hazards" then return true end
     if state[1] and not state[2] and type == "right" then return true end
     if not state[1] and state[2] and type == "left" then return true end
     return false
-  end
+end
 
 indicate = function(type)
     if not IsPedInAnyVehicle(cache.ped) then return false end
@@ -204,7 +211,7 @@ indicate = function(type)
     elseif type == "hazards" and not isIndicating(vehicle, "hazards") then value = {true, true} 
     else value = {false, false} end
     TriggerServerEvent("devx_vehiclemenu:server:setstate", VehToNet(vehicle), value)
-  end
+end
 
 AddStateBagChangeHandler("indicate", nil, function(bagName, key, data)
     local entity = GetEntityFromStateBagName(bagName)
@@ -214,12 +221,10 @@ AddStateBagChangeHandler("indicate", nil, function(bagName, key, data)
     end
 end)
 
-AddStateBagChangeHandler('interiorlight', nil, function(bagName, key, value)
+AddStateBagChangeHandler('interiorLight', nil, function(bagName, key, data)
     local entity = GetEntityFromStateBagName(bagName)
-    if entity == 0 then
-        return
-    end
-    SetVehicleInteriorlight(entity, value)
+    if entity == 0 then return end
+    SetVehicleInteriorlight(entity, data)
 end)
 
 toggleNui = function()
