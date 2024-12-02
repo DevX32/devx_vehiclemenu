@@ -180,31 +180,52 @@ toggleEngine = function()
     SetVehicleEngineOn(vehicle, not isRunning, false, true)
 end
 
+isInteriorLightOn = function(vehicle)
+    if not Entity(vehicle).state.interiorLight then return false end
+    local state = Entity(vehicle).state.interiorLight
+    return state == true
+end
+
 toggleInteriorLight = function()
+    if not IsPedInAnyVehicle(cache.ped) then return false end
     local vehicle = GetVehiclePedIsIn(cache.ped)
-    interiorLightOn = not interiorLightOn
-    SetVehicleInteriorlight(vehicle, interiorLightOn)
+    local value = not isInteriorLightOn(vehicle)
+    TriggerServerEvent('devx_vehiclemenu:server:setInteriorLightState', VehToNet(vehicle), value)
 end
 
-toggleHazardLights = function()
-    local vehicle = GetVehiclePedIsIn(cache.ped)
-    local hazardLightsActive = not (leftIndicatorOn and rightIndicatorOn)
-    leftIndicatorOn = hazardLightsActive
-    rightIndicatorOn = hazardLightsActive
-    SetVehicleIndicatorLights(vehicle, 0, leftIndicatorOn)
-    SetVehicleIndicatorLights(vehicle, 1, rightIndicatorOn)
+isIndicating = function(vehicle, type)
+    if not Entity(vehicle).state.indicate then return false end
+    local state = Entity(vehicle).state.indicate
+    if state[1] and state[2] and type == "hazards" then return true end
+    if state[1] and not state[2] and type == "right" then return true end
+    if not state[1] and state[2] and type == "left" then return true end
+    return false
 end
 
-toggleIndicatorLights = function(indicatorType)
+indicate = function(type)
+    if not IsPedInAnyVehicle(cache.ped) then return false end
     local vehicle = GetVehiclePedIsIn(cache.ped)
-    if indicatorType == 0 then
-        leftIndicatorOn = not leftIndicatorOn
-        SetVehicleIndicatorLights(vehicle, 0, leftIndicatorOn)
-    elseif indicatorType == 1 then
-        rightIndicatorOn = not rightIndicatorOn
-        SetVehicleIndicatorLights(vehicle, 1, rightIndicatorOn)
+    local value = {}
+    if type == "left" and not isIndicating(vehicle, "left") then value = {false, true}
+    elseif type == "right" and not isIndicating(vehicle, "right") then value = {true, false}
+    elseif type == "hazards" and not isIndicating(vehicle, "hazards") then value = {true, true} 
+    else value = {false, false} end
+    TriggerServerEvent("devx_vehiclemenu:server:setstate", VehToNet(vehicle), value)
+end
+
+AddStateBagChangeHandler("indicate", nil, function(bagName, key, data)
+    local entity = GetEntityFromStateBagName(bagName)
+    if entity == 0 then return end
+    for i, status in ipairs(data) do
+      SetVehicleIndicatorLights(entity, i - 1, status)
     end
-end
+end)
+
+AddStateBagChangeHandler('interiorLight', nil, function(bagName, key, data)
+    local entity = GetEntityFromStateBagName(bagName)
+    if entity == 0 then return end
+    SetVehicleInteriorlight(entity, data)
+end)
 
 toggleNui = function()
     nuiActive = true
@@ -233,9 +254,9 @@ RegisterCommand('toggle_vehicle_menu', function()
     end
 end, false)
 
-RegisterCommand('toggle_hazard_lights', toggleHazardLights, false)
-RegisterCommand('toggle_left_indicator', function() toggleIndicatorLights(1) end, false)
-RegisterCommand('toggle_right_indicator', function() toggleIndicatorLights(0) end, false)
+RegisterCommand('toggle_hazard_lights', function() indicate("hazards") end, false)
+RegisterCommand('toggle_left_indicator', function() indicate("left") end, false)
+RegisterCommand('toggle_right_indicator', function() indicate("right") end, false)
 RegisterCommand('close_vehicle_menu', resetNui, false)
 
 TriggerEvent('chat:removeSuggestion', 'toggle_hazard_lights')
