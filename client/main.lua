@@ -310,7 +310,7 @@ handleSeatsUI = function()
     end
 end
 
-handleVehicleMenu = function(data)
+RegisterNUICallback('VehicleMenu', function(data)
     local actions = {
         boot = function() closeVehicleDoor(5) end,
         handle_dside_f = function() closeVehicleDoor(0) end,
@@ -318,7 +318,7 @@ handleVehicleMenu = function(data)
         handle_pside_f = function() closeVehicleDoor(1) end,
         handle_pside_r = function() closeVehicleDoor(3) end,
         bonnet = function() closeVehicleDoor(4) end,
-        engine = function() toggleEngine()  end,
+        engine = function() toggleEngine() end,
         interiorLight = function() toggleInteriorLight() end,
         seat_dside_f = function() switchSeats('seat_dside_f') end,
         seat_dside_r = function() switchSeats('seat_dside_r') end,
@@ -333,7 +333,7 @@ handleVehicleMenu = function(data)
     if action then
         action()
     end
-end
+end)
 
 CreateThread(function()
     local lastVehicle = nil
@@ -360,9 +360,7 @@ CreateThread(function()
     end
 end)
 
-RegisterNUICallback('VehicleMenu', handleVehicleMenu)
-
-RegisterNetEvent('devx_vehiclemenu', function()
+RegisterNetEvent('devx_vehiclemenu:client:open', function()
     if not nuiActive then
         toggleNui()
     end
