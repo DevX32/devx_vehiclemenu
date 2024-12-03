@@ -152,12 +152,11 @@ end
 
 toggleWindow = function(windowIndex)
     local vehicle = GetVehiclePedIsIn(cache.ped)
-    local windowState = IsVehicleWindowIntact(vehicle, windowIndex)
-    if windowState then
-        RollDownWindow(vehicle, windowIndex)
-    else
-        RollUpWindow(vehicle, windowIndex)
-    end
+    if not vehicle then return end
+    local netId = VehToNet(vehicle)
+    local currentState = Entity(vehicle).state.windowStates or {}
+    currentState[windowIndex] = not (currentState[windowIndex] or false)
+    TriggerServerEvent("devx_vehiclemenu:server:setWindowState", netId, currentState)
 end
 
 switchSeats = function(seatKey)
@@ -176,6 +175,7 @@ end
 
 toggleEngine = function()
     local vehicle = GetVehiclePedIsIn(cache.ped)
+    if not vehicle then return end
     local isRunning = GetIsVehicleEngineRunning(vehicle)
     SetVehicleEngineOn(vehicle, not isRunning, false, true)
 end
@@ -189,8 +189,9 @@ end
 toggleInteriorLight = function()
     if not IsPedInAnyVehicle(cache.ped) then return false end
     local vehicle = GetVehiclePedIsIn(cache.ped)
+    local netId = VehToNet(vehicle)
     local value = not isInteriorLightOn(vehicle)
-    TriggerServerEvent('devx_vehiclemenu:server:setInteriorLightState', VehToNet(vehicle), value)
+    TriggerServerEvent('devx_vehiclemenu:server:setInteriorLightState', netId, value)
 end
 
 isIndicating = function(vehicle, type)
@@ -205,12 +206,13 @@ end
 indicate = function(type)
     if not IsPedInAnyVehicle(cache.ped) then return false end
     local vehicle = GetVehiclePedIsIn(cache.ped)
+    local netId = VehToNet(vehicle)
     local value = {}
     if type == "left" and not isIndicating(vehicle, "left") then value = {false, true}
     elseif type == "right" and not isIndicating(vehicle, "right") then value = {true, false}
     elseif type == "hazards" and not isIndicating(vehicle, "hazards") then value = {true, true} 
     else value = {false, false} end
-    TriggerServerEvent("devx_vehiclemenu:server:setstate", VehToNet(vehicle), value)
+    TriggerServerEvent("devx_vehiclemenu:server:setstate", netId, value)
 end
 
 AddStateBagChangeHandler("indicate", nil, function(bagName, key, data)
@@ -225,6 +227,18 @@ AddStateBagChangeHandler('interiorLight', nil, function(bagName, key, data)
     local entity = GetEntityFromStateBagName(bagName)
     if entity == 0 then return end
     SetVehicleInteriorlight(entity, data)
+end)
+
+AddStateBagChangeHandler('windowStates', nil, function(bagName, key, state)
+    local entity = GetEntityFromStateBagName(bagName)
+    if entity == 0 then return end
+    for windowIndex, isOpen in pairs(state) do
+        if isOpen then
+            RollDownWindow(entity, windowIndex)
+        else
+            RollUpWindow(entity, windowIndex)
+        end
+    end
 end)
 
 toggleNui = function()
