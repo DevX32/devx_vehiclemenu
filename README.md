@@ -8,7 +8,7 @@
 - Drag And Drop
 
 ## Events And Exports
-- TriggerEvent('devx_vehiclemenu')
+- TriggerEvent('devx_vehiclemenu:client:open')
 
 # Control
 - F5 Button
