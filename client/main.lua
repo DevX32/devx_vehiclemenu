@@ -1,7 +1,4 @@
 local config = require('shared.config')
-local leftIndicatorOn = false
-local rightIndicatorOn = false
-local interiorLightOn = false
 
 iconHTML = function(source, classes, style)
     local defaultStyle = "outline:none; border:none; -webkit-user-select:none; user-select:none; width:1vw; height:2vh;"
@@ -210,9 +207,9 @@ indicate = function(type)
     local value = {}
     if type == "left" and not isIndicating(vehicle, "left") then value = {false, true}
     elseif type == "right" and not isIndicating(vehicle, "right") then value = {true, false}
-    elseif type == "hazards" and not isIndicating(vehicle, "hazards") then value = {true, true} 
+    elseif type == "hazards" and not isIndicating(vehicle, "hazards") then value = {true, true}
     else value = {false, false} end
-    TriggerServerEvent("devx_vehiclemenu:server:setstate", netId, value)
+    TriggerServerEvent("devx_vehiclemenu:server:setIndicating", netId, value)
 end
 
 AddStateBagChangeHandler("indicate", nil, function(bagName, key, data)
