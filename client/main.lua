@@ -21,7 +21,7 @@ local vehicleParts = {
     handle_dside_r = iconHTML('icons/door.webp', 'icon'),
     handle_pside_f = iconHTML('icons/door.webp', 'icon'),
     handle_pside_r = iconHTML('icons/door.webp', 'icon'),
-    engine = faIconHTML('fas fa-cogs'),
+    engine = iconHTML('icons/engine.webp', 'icon', 'width:1.5vw; height:2.5vh;'),
     interiorLight = faIconHTML('far fa-lightbulb'),
     window_driver = faIconHTML('fas fa-sort'),
     window_passenger = faIconHTML('fas fa-sort'),
@@ -50,21 +50,23 @@ local windowBones = {
     window_rear_right = 'window_rr'
 }
 
-local colors = {
-    default = '#FFFFFF',
-    running = '#8685ef',
+local speedConversionFactors = {
+    kmph = 3.6,
+    mph = 2.23694
 }
 
 local nuiActive = false
 local seatsUI = false
 
-getVehiclePartIcon = function(partName, isEngineRunning)
+getVehiclePartIcon = function(partName)
     local icon = vehicleParts[partName] or ''
-    local color = colors.default
-    if partName == 'engine' and isEngineRunning then
-        color = colors.running
+    local vehicle = GetVehiclePedIsIn(cache.ped, false)
+    if partName == 'engine' then
+        if GetPedInVehicleSeat(vehicle, -1) ~= cache.ped then
+            icon = ''
+        end
     end
-    return string.format('<span style="color: %s;">%s</span>', color, icon)
+    return icon
 end
 
 drawHTML = function(coords, text, id)
@@ -85,11 +87,12 @@ showNUIMode = function()
             local vehicle = GetVehiclePedIsIn(cache.ped, false)
             if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
                 local isEngineRunning = GetIsVehicleEngineRunning(vehicle)
+                local vehiclePos = GetEntityCoords(vehicle)
                 for partName, _ in pairs(vehicleParts) do
                     local part = GetEntityBoneIndexByName(vehicle, partName)
                     if part ~= -1 then
                         local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                        if #(GetEntityCoords(vehicle) - pos) < 10 and GetEntityCoords(vehicle) ~= pos then
+                        if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
                             drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
                         end
                     end
@@ -121,11 +124,16 @@ showSeatsUI = function()
         local vehicle = GetVehiclePedIsIn(cache.ped, false)
         while nuiActive and vehicle ~= 0 do
             if IsPedInAnyVehicle(cache.ped, false) then
+                local vehiclePos = GetEntityCoords(vehicle)
                 for k, v in pairs(vehicleSeats) do
                     local part = GetEntityBoneIndexByName(vehicle, k)
-                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                    if part ~= -1 and #(GetEntityCoords(vehicle) - pos) < 10 and GetEntityCoords(vehicle) ~= pos then
-                        drawHTML(pos, v, k)
+                    if part ~= -1 then
+                        local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                        if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
+                            local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[k])
+                            local seatIcon = isSeatOccupied and iconHTML('icons/seat-occupied.webp', 'icon') or v
+                            drawHTML(pos, seatIcon, k)
+                        end
                     end
                 end
             else
@@ -156,16 +164,22 @@ toggleWindow = function(windowIndex)
     TriggerServerEvent("devx_vehiclemenu:server:setWindowState", netId, currentState)
 end
 
+getVehicleSpeed = function(vehicle)
+    local vehicleSpeedMS = GetEntitySpeed(vehicle)
+    return vehicleSpeedMS * speedConversionFactors[config.speedUnit]
+end
+
 switchSeats = function(seatKey)
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
     if not vehicle then return end
     local targetSeat = seatIndexMap[seatKey]
-    local vehicleSpeed = GetEntitySpeed(vehicle) * 3.6
+    local vehicleSpeed = getVehicleSpeed(vehicle)
     if vehicleSpeed < 1.0 then
         local isSeatOccupied = not IsVehicleSeatFree(vehicle, targetSeat)
         if not isSeatOccupied then
             SetPedConfigFlag(cache.ped, 184, true)
             SetPedIntoVehicle(cache.ped, vehicle, targetSeat)
+            showSeatsUI()
         end
     end
 end
@@ -209,7 +223,7 @@ indicate = function(type)
     elseif type == "right" and not isIndicating(vehicle, "right") then value = {true, false}
     elseif type == "hazards" and not isIndicating(vehicle, "hazards") then value = {true, true}
     else value = {false, false} end
-    TriggerServerEvent("devx_vehiclemenu:server:setIndicating", netId, value)
+    TriggerServerEvent("devx_vehiclemenu:server:setIndicatorState", netId, value)
 end
 
 AddStateBagChangeHandler("indicate", nil, function(bagName, key, data)
@@ -322,20 +336,24 @@ handleVehicleMenu = function(data)
 end
 
 CreateThread(function()
+    local lastVehicle = nil
     while true do
         local vehicle = GetVehiclePedIsIn(cache.ped)
-        if DisableMouse then
-            disableControls()
-        end
-        if nuiActive then
-            handleSeatsUI()
-            if IsControlJustPressed(0, 322) then
-                resetNui()
-            end
+        if vehicle ~= lastVehicle then
+            lastVehicle = vehicle
             if vehicle ~= 0 then
                 isEngineRunning = GetIsVehicleEngineRunning(vehicle)
             else
                 isEngineRunning = false
+            end
+        end
+        if nuiActive then
+            if DisableMouse then
+                disableControls()
+            end
+            handleSeatsUI()
+            if IsControlJustPressed(0, 322) then
+                resetNui()
             end
         end
         Wait(3)

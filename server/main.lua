@@ -1,4 +1,4 @@
-RegisterServerEvent("devx_vehiclemenu:server:setIndicating", function(netId, value)
+RegisterServerEvent("devx_vehiclemenu:server:setIndicatorState", function(netId, value)
 	local vehicle = NetworkGetEntityFromNetworkId(netId)
 	if DoesEntityExist(vehicle) then
 		Entity(vehicle).state.indicate = value
