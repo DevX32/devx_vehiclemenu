@@ -131,7 +131,7 @@ showSeatsUI = function()
                         local pos = GetWorldPositionOfEntityBone(vehicle, part)
                         if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
                             local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[k])
-                            local seatIcon = isSeatOccupied and iconHTML('icons/seat-occupied.webp', 'icon') or v
+                            local seatIcon = isSeatOccupied and iconHTML('icons/seat.webp', 'icon') or v
                             drawHTML(pos, seatIcon, k)
                         end
                     end
