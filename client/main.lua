@@ -1,39 +1,38 @@
 local config = require('shared.config')
+local defaultIconStyle = "outline:none; border:none; -webkit-user-select:none; user-select:none; width:1vw; height:2vh;"
+local defaultFaIconStyle = "font-size:1.5vh;"
 
-iconHTML = function(source, classes, style)
-    local defaultStyle = "outline:none; border:none; -webkit-user-select:none; user-select:none; width:1vw; height:2vh;"
+local function generateHTML(tag, classes, source, style, isIcon)
+    local defaultStyle = isIcon and defaultIconStyle or defaultFaIconStyle
     local combinedStyle = style and (defaultStyle .. style) or defaultStyle
     local styleAttr = string.format('style="%s"', combinedStyle)
-    return string.format('<img class="%s" src="%s" %s draggable="false"/>', classes, source, styleAttr)
-end
-
-faIconHTML = function(iconClass, style)
-    local defaultStyle = "font-size:1.5vh;"
-    local combinedStyle = defaultStyle .. (style or "")
-    local styleAttr = string.format('style="%s"', combinedStyle)
-    return string.format('<i class="%s icon" %s></i>', iconClass, styleAttr)
+    if isIcon then
+        return string.format('<img class="%s" src="%s" %s draggable="false"/>', classes, source, styleAttr)
+    else
+        return string.format('<i class="%s icon" %s></i>', classes, styleAttr)
+    end
 end
 
 local vehicleParts = {
-    bonnet = iconHTML('icons/boot.webp', 'icon'),
-    boot = iconHTML('icons/boot.webp', 'icon', 'transform: scale(-1, 1)'),
-    handle_dside_f = iconHTML('icons/door.webp', 'icon'),
-    handle_dside_r = iconHTML('icons/door.webp', 'icon'),
-    handle_pside_f = iconHTML('icons/door.webp', 'icon'),
-    handle_pside_r = iconHTML('icons/door.webp', 'icon'),
-    engine = iconHTML('icons/engine.webp', 'icon', 'width:1.5vw; height:2.5vh;'),
-    interiorLight = faIconHTML('far fa-lightbulb'),
-    window_driver = faIconHTML('fas fa-sort'),
-    window_passenger = faIconHTML('fas fa-sort'),
-    window_rear_left = faIconHTML('fas fa-sort'),
-    window_rear_right = faIconHTML('fas fa-sort'),
+    bonnet = generateHTML('img', 'icon', 'icons/boot.webp', nil, true),
+    boot = generateHTML('img', 'icon', 'icons/boot.webp', 'transform: scale(-1, 1)', true),
+    handle_dside_f = generateHTML('img', 'icon', 'icons/door.webp', nil, true),
+    handle_dside_r = generateHTML('img', 'icon', 'icons/door.webp', nil, true),
+    handle_pside_f = generateHTML('img', 'icon', 'icons/door.webp', nil, true),
+    handle_pside_r = generateHTML('img', 'icon', 'icons/door.webp', nil, true),
+    engine = generateHTML('img', 'icon', 'icons/engine.webp', 'width:1.5vw; height:2.5vh;', true),
+    interiorLight = generateHTML('i', 'far fa-lightbulb', nil, nil, false),
+    window_driver = generateHTML('i', 'fas fa-sort', nil, nil, false),
+    window_passenger = generateHTML('i', 'fas fa-sort', nil, nil, false),
+    window_rear_left = generateHTML('i', 'fas fa-sort', nil, nil, false),
+    window_rear_right = generateHTML('i', 'fas fa-sort', nil, nil, false),
 }
 
 local vehicleSeats = {
-    seat_dside_f = iconHTML('icons/seat.webp', 'icon'),
-    seat_dside_r = iconHTML('icons/seat.webp', 'icon'),
-    seat_pside_f = iconHTML('icons/seat.webp', 'icon'),
-    seat_pside_r = iconHTML('icons/seat.webp', 'icon')
+    seat_dside_f = generateHTML('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_dside_r = generateHTML('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_pside_f = generateHTML('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_pside_r = generateHTML('img', 'icon', 'icons/seat.webp', nil, true)
 }
 
 local seatIndexMap = {
@@ -58,7 +57,7 @@ local speedConversionFactors = {
 local nuiActive = false
 local seatsUI = false
 
-getVehiclePartIcon = function(partName)
+local function getVehiclePartIcon(partName)
     local icon = vehicleParts[partName] or ''
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
     if partName == 'engine' then
@@ -69,7 +68,7 @@ getVehiclePartIcon = function(partName)
     return icon
 end
 
-drawHTML = function(coords, text, id)
+local function drawHTML(coords, text, id)
     local show, x, y = GetHudScreenPositionFromWorldPosition(coords.x, coords.y, coords.z + 0.35)
     if not show then
         SendNUIMessage({
@@ -81,7 +80,7 @@ drawHTML = function(coords, text, id)
     end
 end
 
-showNUIMode = function()
+local function showNUIMode()
     CreateThread(function()
         while nuiActive and not seatsUI do
             local vehicle = GetVehiclePedIsIn(cache.ped, false)
@@ -118,7 +117,7 @@ showNUIMode = function()
     end)
 end
 
-showSeatsUI = function()
+local function showSeatsUI()
     SendNUIMessage({ action = 'close' })
     CreateThread(function()
         local vehicle = GetVehiclePedIsIn(cache.ped, false)
@@ -131,7 +130,7 @@ showSeatsUI = function()
                         local pos = GetWorldPositionOfEntityBone(vehicle, part)
                         if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
                             local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[k])
-                            local seatIcon = isSeatOccupied and iconHTML('icons/seat.webp', 'icon') or v
+                            local seatIcon = isSeatOccupied and generateHTML('img', 'icon', 'icons/seat.webp', nil, true) or v
                             drawHTML(pos, seatIcon, k)
                         end
                     end
@@ -146,7 +145,7 @@ showSeatsUI = function()
     end)
 end
 
-closeVehicleDoor = function(part)
+local function closeVehicleDoor(part)
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
     if GetVehicleDoorAngleRatio(vehicle, part) > 0.0 then
         SetVehicleDoorShut(vehicle, part, false)
@@ -155,7 +154,7 @@ closeVehicleDoor = function(part)
     end
 end
 
-toggleWindow = function(windowIndex)
+local function toggleWindow(windowIndex)
     local vehicle = GetVehiclePedIsIn(cache.ped)
     if not vehicle then return end
     local netId = VehToNet(vehicle)
@@ -164,12 +163,12 @@ toggleWindow = function(windowIndex)
     TriggerServerEvent("devx_vehiclemenu:server:setWindowState", netId, currentState)
 end
 
-getVehicleSpeed = function(vehicle)
+local function getVehicleSpeed(vehicle)
     local vehicleSpeedMS = GetEntitySpeed(vehicle)
     return vehicleSpeedMS * speedConversionFactors[config.speedUnit]
 end
 
-switchSeats = function(seatKey)
+local function switchSeats(seatKey)
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
     if not vehicle then return end
     local targetSeat = seatIndexMap[seatKey]
@@ -184,20 +183,20 @@ switchSeats = function(seatKey)
     end
 end
 
-toggleEngine = function()
+local function toggleEngine()
     local vehicle = GetVehiclePedIsIn(cache.ped)
     if not vehicle then return end
     local isRunning = GetIsVehicleEngineRunning(vehicle)
     SetVehicleEngineOn(vehicle, not isRunning, false, true)
 end
 
-isInteriorLightOn = function(vehicle)
+local function isInteriorLightOn(vehicle)
     if not Entity(vehicle).state.interiorLight then return false end
     local state = Entity(vehicle).state.interiorLight
     return state == true
 end
 
-toggleInteriorLight = function()
+local function toggleInteriorLight()
     if not IsPedInAnyVehicle(cache.ped) then return false end
     local vehicle = GetVehiclePedIsIn(cache.ped)
     local netId = VehToNet(vehicle)
@@ -205,7 +204,7 @@ toggleInteriorLight = function()
     TriggerServerEvent('devx_vehiclemenu:server:setInteriorLightState', netId, value)
 end
 
-isIndicating = function(vehicle, type)
+local function isIndicating(vehicle, type)
     if not Entity(vehicle).state.indicate then return false end
     local state = Entity(vehicle).state.indicate
     if state[1] and state[2] and type == "hazards" then return true end
@@ -214,7 +213,7 @@ isIndicating = function(vehicle, type)
     return false
 end
 
-indicate = function(type)
+local function indicate(type)
     if not IsPedInAnyVehicle(cache.ped) then return false end
     local vehicle = GetVehiclePedIsIn(cache.ped)
     local netId = VehToNet(vehicle)
@@ -224,6 +223,39 @@ indicate = function(type)
     elseif type == "hazards" and not isIndicating(vehicle, "hazards") then value = {true, true}
     else value = {false, false} end
     TriggerServerEvent("devx_vehiclemenu:server:setIndicatorState", netId, value)
+end
+
+local function toggleNui()
+    nuiActive = true
+    SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(true)
+    showNUIMode()
+end
+
+local function resetNui()
+    nuiActive = false
+    SetNuiFocus(false, false)
+    SendNUIMessage({ action = 'close' })
+end
+
+local function disableControls()
+    if nuiActive then
+        EnableControlAction(0, 1, true)
+        EnableControlAction(0, 2, true)
+    else
+        DisableControlAction(0, 1, true)
+        DisableControlAction(0, 2, true)
+    end
+    DisableControlAction(0, 106, true)
+end
+
+local function handleSeatsUI()
+    if IsControlJustPressed(0, 25) then
+        seatsUI = true
+        showSeatsUI()
+    elseif IsControlJustReleased(0, 25) then
+        seatsUI = false
+    end
 end
 
 AddStateBagChangeHandler("indicate", nil, function(bagName, key, data)
@@ -252,19 +284,6 @@ AddStateBagChangeHandler('windowStates', nil, function(bagName, key, state)
     end
 end)
 
-toggleNui = function()
-    nuiActive = true
-    SetNuiFocus(true, true)
-    SetNuiFocusKeepInput(true)
-    showNUIMode()
-end
-
-resetNui = function()
-    nuiActive = false
-    SetNuiFocus(false, false)
-    SendNUIMessage({ action = 'close' })
-end
-
 RegisterKeyMapping('toggle_vehicle_menu', 'Toggle Vehicle Menu', 'keyboard', config.keyBind)
 RegisterKeyMapping('toggle_hazard_lights', 'Toggle Hazard Lights', 'keyboard', 'UP')
 RegisterKeyMapping('toggle_left_indicator', 'Toggle Left Indicator', 'keyboard', 'LEFT')
@@ -289,26 +308,6 @@ TriggerEvent('chat:removeSuggestion', 'toggle_left_indicator')
 TriggerEvent('chat:removeSuggestion', 'toggle_right_indicator')
 TriggerEvent('chat:removeSuggestion', 'close_vehicle_menu')
 TriggerEvent('chat:removeSuggestion', 'toggle_vehicle_menu')
-
-disableControls = function()
-    if nuiActive then
-        EnableControlAction(0, 1, true)
-        EnableControlAction(0, 2, true)
-    else
-        DisableControlAction(0, 1, true)
-        DisableControlAction(0, 2, true)
-    end
-    DisableControlAction(0, 106, true)
-end
-
-handleSeatsUI = function()
-    if IsControlJustPressed(0, 25) then
-        seatsUI = true
-        showSeatsUI()
-    elseif IsControlJustReleased(0, 25) then
-        seatsUI = false
-    end
-end
 
 RegisterNUICallback('VehicleMenu', function(data)
     local actions = {
