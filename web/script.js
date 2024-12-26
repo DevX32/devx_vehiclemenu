@@ -7,7 +7,8 @@ function validatePosition(position) {
 
 function showNUIMode(data) {
     const [xPos, yPos] = validatePosition(data.position);
-    if (!$(`#${data.id}`).length) {
+    const elementId = `#${data.id}`;
+    if (!$(elementId).length) {
         $('body').append(`
             <p id="${data.id}" style="
                 display: none;
@@ -17,14 +18,14 @@ function showNUIMode(data) {
                 top: ${yPos * 100}vh;">
                 ${data.html}
             </p>`);
-        $(`#${data.id}`).fadeIn(500);
+        $(elementId).fadeIn(500);
     } else {
-        $(`#${data.id}`).css({
-            left: `${xPos * 100}vw`, 
-            top: `${yPos * 100}vh` 
+        $(elementId).css({
+            left: `${xPos * 100}vw`,
+            top: `${yPos * 100}vh`
         });
     }
-    $(`#${data.id}`).off().click(function () {
+    $(elementId).off().click(function () {
         $.post(`http://devx_vehiclemenu/VehicleMenu`, JSON.stringify({
             id: data.id,
         }));
@@ -32,16 +33,16 @@ function showNUIMode(data) {
 }
 
 window.addEventListener("message", function (event) {
-    let data = event.data;
+    const data = event.data;
     switch (data.action) {
         case 'show':
             showNUIMode(data);
-        break;
+            break;
         case 'close':
             $('body').html('');
-        break;
+            break;
         case 'bonnet':
             $("#bonnet").remove();
-        break;
+            break;
     }
 });
