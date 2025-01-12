@@ -334,10 +334,9 @@ RegisterNUICallback('VehicleMenu', function(data)
     end
 end)
 
-CreateThread(function()
+lib.onCache('vehicle', function(vehicle)
     local lastVehicle = nil
     while true do
-        local vehicle = GetVehiclePedIsIn(cache.ped)
         if vehicle ~= lastVehicle then
             lastVehicle = vehicle
             if vehicle ~= 0 then
