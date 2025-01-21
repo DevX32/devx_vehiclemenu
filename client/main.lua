@@ -81,7 +81,7 @@ local function drawHTML(coords, text, id)
     end
 end
 
-local function showVehicleParts()
+local function vehiclePartsThread()
     while nuiActive and not seatsUI do
         local vehicle = GetVehiclePedIsIn(cache.ped, false)
         if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
@@ -116,8 +116,11 @@ local function showVehicleParts()
     end
 end
 
-local function showSeats()
-    SendNUIMessage({ action = 'close' })
+local function showVehicleParts()
+    CreateThread(vehiclePartsThread)
+end
+
+local function seatThread()
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
     while nuiActive and vehicle ~= 0 do
         if IsPedInAnyVehicle(cache.ped, false) then
@@ -142,8 +145,10 @@ local function showSeats()
     SendNUIMessage({ action = 'close' })
 end
 
-CreateThread(showVehicleParts)
-CreateThread(showSeats)
+local function showSeats()
+    SendNUIMessage({ action = 'close' })
+    CreateThread(seatThread)
+end
 
 local function closeVehicleDoor(part)
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
@@ -187,7 +192,6 @@ local function toggleEngine()
     local vehicle = GetVehiclePedIsIn(cache.ped)
     if not vehicle then return end
     local isRunning = GetIsVehicleEngineRunning(vehicle)
-    exports['keys']:toggleEngine()
     SetVehicleEngineOn(vehicle, not isRunning, false, true)
 end
 
