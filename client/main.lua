@@ -87,22 +87,12 @@ local function vehiclePartsThread()
         if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
             local isEngineRunning = GetIsVehicleEngineRunning(vehicle)
             local vehiclePos = GetEntityCoords(vehicle)
-            local engineIcon = isEngineRunning and 'icons/engine_on.webp' or 'icons/engine.webp'
-            local enginePart = GetEntityBoneIndexByName(vehicle, 'engine')
-            if enginePart ~= -1 then
-                local pos = GetWorldPositionOfEntityBone(vehicle, enginePart)
-                if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                    drawHTML(pos, generateHTML('img', 'icon', engineIcon, 'width:1.5vw; height:2.5vh;', true), 'engine')
-                end
-            end
             for partName, _ in pairs(vehicleParts) do
-                if partName ~= 'engine' then
-                    local part = GetEntityBoneIndexByName(vehicle, partName)
-                    if part ~= -1 then
-                        local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                        if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                            drawHTML(pos, getVehiclePartIcon(partName), partName)
-                        end
+                local part = GetEntityBoneIndexByName(vehicle, partName)
+                if part ~= -1 then
+                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                    if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
+                        drawHTML(pos, getVehiclePartIcon(partName), partName)
                     end
                 end
             end
