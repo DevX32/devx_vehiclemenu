@@ -1,3 +1,4 @@
+
 local config = require('shared.config')
 local defaultIconStyle = "outline:none; border:none; -webkit-user-select:none; user-select:none; width:1vw; height:2vh;"
 local defaultFaIconStyle = "font-size:1.5vh;"
@@ -80,70 +81,69 @@ local function drawHTML(coords, text, id)
     end
 end
 
-local function showNUIMode()
-    CreateThread(function()
-        while nuiActive and not seatsUI do
-            local vehicle = GetVehiclePedIsIn(cache.ped, false)
-            if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
-                local isEngineRunning = GetIsVehicleEngineRunning(vehicle)
-                local vehiclePos = GetEntityCoords(vehicle)
-                for partName, _ in pairs(vehicleParts) do
-                    local part = GetEntityBoneIndexByName(vehicle, partName)
-                    if part ~= -1 then
-                        local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                        if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                            drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
-                        end
-                    end
-                end
-                if isEngineRunning then
-                    for partName, boneName in pairs(windowBones) do
-                        local part = GetEntityBoneIndexByName(vehicle, boneName)
-                        if part ~= -1 then
-                            local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                            drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
-                        end
-                    end
-                end
-            else
-                nuiActive = false
-            end
-            Wait(25)
-        end
-        if not seatsUI then
-            SetNuiFocus(false, false)
-            SendNUIMessage({ action = 'close' })
-        end
-    end)
-end
-
-local function showSeatsUI()
-    SendNUIMessage({ action = 'close' })
-    CreateThread(function()
+local function showVehicleParts()
+    while nuiActive and not seatsUI do
         local vehicle = GetVehiclePedIsIn(cache.ped, false)
-        while nuiActive and vehicle ~= 0 do
-            if IsPedInAnyVehicle(cache.ped, false) then
-                local vehiclePos = GetEntityCoords(vehicle)
-                for k, v in pairs(vehicleSeats) do
-                    local part = GetEntityBoneIndexByName(vehicle, k)
-                    if part ~= -1 then
-                        local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                        if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                            local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[k])
-                            local seatIcon = isSeatOccupied and generateHTML('img', 'icon', 'icons/seat.webp', nil, true) or v
-                            drawHTML(pos, seatIcon, k)
-                        end
+        if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
+            local isEngineRunning = GetIsVehicleEngineRunning(vehicle)
+            local vehiclePos = GetEntityCoords(vehicle)
+            for partName, _ in pairs(vehicleParts) do
+                local part = GetEntityBoneIndexByName(vehicle, partName)
+                if part ~= -1 then
+                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                    if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
+                        drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
                     end
                 end
-            else
-                nuiActive = false
             end
-            Wait(25)
+            if isEngineRunning then
+                for partName, boneName in pairs(windowBones) do
+                    local part = GetEntityBoneIndexByName(vehicle, boneName)
+                    if part ~= -1 then
+                        local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                        drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
+                    end
+                end
+            end
+        else
+            nuiActive = false
         end
+        Wait(25)
+    end
+    if not seatsUI then
         SetNuiFocus(false, false)
         SendNUIMessage({ action = 'close' })
-    end)
+    end
 end
+
+local function showSeats()
+    SendNUIMessage({ action = 'close' })
+    local vehicle = GetVehiclePedIsIn(cache.ped, false)
+    while nuiActive and vehicle ~= 0 do
+        if IsPedInAnyVehicle(cache.ped, false) then
+            local vehiclePos = GetEntityCoords(vehicle)
+            for k, v in pairs(vehicleSeats) do
+                local part = GetEntityBoneIndexByName(vehicle, k)
+                if part ~= -1 then
+                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                    if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
+                        local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[k])
+                        local seatIcon = isSeatOccupied and generateHTML('img', 'icon', 'icons/seat.webp', nil, true) or v
+                        drawHTML(pos, seatIcon, k)
+                    end
+                end
+            end
+        else
+            nuiActive = false
+        end
+        Wait(25)
+    end
+    SetNuiFocus(false, false)
+    SendNUIMessage({ action = 'close' })
+end
+
+CreateThread(showVehicleParts)
+CreateThread(showSeats)
 
 local function closeVehicleDoor(part)
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
@@ -178,7 +178,7 @@ local function switchSeats(seatKey)
         if not isSeatOccupied then
             SetPedConfigFlag(cache.ped, 184, true)
             SetPedIntoVehicle(cache.ped, vehicle, targetSeat)
-            showSeatsUI()
+            showSeats()
         end
     end
 end
@@ -187,6 +187,7 @@ local function toggleEngine()
     local vehicle = GetVehiclePedIsIn(cache.ped)
     if not vehicle then return end
     local isRunning = GetIsVehicleEngineRunning(vehicle)
+    exports['keys']:toggleEngine()
     SetVehicleEngineOn(vehicle, not isRunning, false, true)
 end
 
@@ -229,7 +230,7 @@ local function toggleNui()
     nuiActive = true
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(true)
-    showNUIMode()
+    showVehicleParts()
 end
 
 local function resetNui()
@@ -252,7 +253,7 @@ end
 local function handleSeatsUI()
     if IsControlJustPressed(0, 25) then
         seatsUI = true
-        showSeatsUI()
+        showSeats()
     elseif IsControlJustReleased(0, 25) then
         seatsUI = false
     end
