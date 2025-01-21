@@ -5,7 +5,7 @@ function validatePosition(position) {
     ];
 }
 
-function showNUIMode(data) {
+function showVehicleParts(data) {
     const [xPos, yPos] = validatePosition(data.position);
     const elementId = `#${data.id}`;
     if (!$(elementId).length) {
@@ -36,7 +36,7 @@ window.addEventListener("message", function (event) {
     const data = event.data;
     switch (data.action) {
         case 'show':
-            showNUIMode(data);
+            showVehicleParts(data);
             break;
         case 'close':
             $('body').html('');
