@@ -87,12 +87,22 @@ local function vehiclePartsThread()
         if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
             local isEngineRunning = GetIsVehicleEngineRunning(vehicle)
             local vehiclePos = GetEntityCoords(vehicle)
+            local engineIcon = isEngineRunning and 'icons/engine_on.webp' or 'icons/engine.webp'
+            local enginePart = GetEntityBoneIndexByName(vehicle, 'engine')
+            if enginePart ~= -1 then
+                local pos = GetWorldPositionOfEntityBone(vehicle, enginePart)
+                if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
+                    drawHTML(pos, generateHTML('img', 'icon', engineIcon, 'width:1.5vw; height:2.5vh;', true), 'engine')
+                end
+            end
             for partName, _ in pairs(vehicleParts) do
-                local part = GetEntityBoneIndexByName(vehicle, partName)
-                if part ~= -1 then
-                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                    if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                        drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
+                if partName ~= 'engine' then
+                    local part = GetEntityBoneIndexByName(vehicle, partName)
+                    if part ~= -1 then
+                        local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                        if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
+                            drawHTML(pos, getVehiclePartIcon(partName), partName)
+                        end
                     end
                 end
             end
@@ -101,7 +111,7 @@ local function vehiclePartsThread()
                     local part = GetEntityBoneIndexByName(vehicle, boneName)
                     if part ~= -1 then
                         local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                        drawHTML(pos, getVehiclePartIcon(partName, isEngineRunning), partName)
+                        drawHTML(pos, getVehiclePartIcon(partName), partName)
                     end
                 end
             end
@@ -120,19 +130,20 @@ local function showVehicleParts()
     CreateThread(vehiclePartsThread)
 end
 
-local function seatThread()
+local function seatPartThread()
+    SendNUIMessage({ action = 'close' })
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
     while nuiActive and vehicle ~= 0 do
         if IsPedInAnyVehicle(cache.ped, false) then
             local vehiclePos = GetEntityCoords(vehicle)
-            for k, v in pairs(vehicleSeats) do
-                local part = GetEntityBoneIndexByName(vehicle, k)
+            for seatKey, seatIcon in pairs(vehicleSeats) do
+                local part = GetEntityBoneIndexByName(vehicle, seatKey)
                 if part ~= -1 then
                     local pos = GetWorldPositionOfEntityBone(vehicle, part)
                     if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                        local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[k])
-                        local seatIcon = isSeatOccupied and generateHTML('img', 'icon', 'icons/seat.webp', nil, true) or v
-                        drawHTML(pos, seatIcon, k)
+                        local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[seatKey])
+                        local icon = isSeatOccupied and generateHTML('img', 'icon', 'icons/seat_occupied.webp', nil, true) or seatIcon
+                        drawHTML(pos, icon, seatKey)
                     end
                 end
             end
@@ -146,8 +157,7 @@ local function seatThread()
 end
 
 local function showSeats()
-    SendNUIMessage({ action = 'close' })
-    CreateThread(seatThread)
+    CreateThread(seatPartThread)
 end
 
 local function closeVehicleDoor(part)
