@@ -35,7 +35,7 @@ function showVehicleParts(data) {
 window.addEventListener("message", function (event) {
     const data = event.data;
     switch (data.action) {
-        case 'show':
+        case 'visible':
             showVehicleParts(data);
             break;
         case 'close':

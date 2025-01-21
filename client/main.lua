@@ -3,7 +3,7 @@ local config = require('shared.config')
 local defaultIconStyle = "outline:none; border:none; -webkit-user-select:none; user-select:none; width:1vw; height:2vh;"
 local defaultFaIconStyle = "font-size:1.5vh;"
 
-local function generateHTML(tag, classes, source, style, isIcon)
+local function showIcon(tag, classes, source, style, isIcon)
     local defaultStyle = isIcon and defaultIconStyle or defaultFaIconStyle
     local combinedStyle = style and (defaultStyle .. style) or defaultStyle
     local styleAttr = string.format('style="%s"', combinedStyle)
@@ -15,25 +15,25 @@ local function generateHTML(tag, classes, source, style, isIcon)
 end
 
 local vehicleParts = {
-    bonnet = generateHTML('img', 'icon', 'icons/boot.webp', nil, true),
-    boot = generateHTML('img', 'icon', 'icons/boot.webp', 'transform: scale(-1, 1)', true),
-    handle_dside_f = generateHTML('img', 'icon', 'icons/door.webp', nil, true),
-    handle_dside_r = generateHTML('img', 'icon', 'icons/door.webp', nil, true),
-    handle_pside_f = generateHTML('img', 'icon', 'icons/door.webp', nil, true),
-    handle_pside_r = generateHTML('img', 'icon', 'icons/door.webp', nil, true),
-    engine = generateHTML('img', 'icon', 'icons/engine.webp', 'width:1.5vw; height:2.5vh;', true),
-    interiorLight = generateHTML('i', 'far fa-lightbulb', nil, nil, false),
-    window_driver = generateHTML('i', 'fas fa-sort', nil, nil, false),
-    window_passenger = generateHTML('i', 'fas fa-sort', nil, nil, false),
-    window_rear_left = generateHTML('i', 'fas fa-sort', nil, nil, false),
-    window_rear_right = generateHTML('i', 'fas fa-sort', nil, nil, false),
+    bonnet = showIcon('img', 'icon', 'icons/boot.webp', nil, true),
+    boot = showIcon('img', 'icon', 'icons/boot.webp', 'transform: scale(-1, 1)', true),
+    handle_dside_f = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    handle_dside_r = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    handle_pside_f = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    handle_pside_r = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    engine = showIcon('img', 'icon', 'icons/engine.webp', 'width:1.5vw; height:2.5vh;', true),
+    interiorLight = showIcon('i', 'far fa-lightbulb', nil, nil, false),
+    window_driver = showIcon('i', 'fas fa-sort', nil, nil, false),
+    window_passenger = showIcon('i', 'fas fa-sort', nil, nil, false),
+    window_rear_left = showIcon('i', 'fas fa-sort', nil, nil, false),
+    window_rear_right = showIcon('i', 'fas fa-sort', nil, nil, false),
 }
 
 local vehicleSeats = {
-    seat_dside_f = generateHTML('img', 'icon', 'icons/seat.webp', nil, true),
-    seat_dside_r = generateHTML('img', 'icon', 'icons/seat.webp', nil, true),
-    seat_pside_f = generateHTML('img', 'icon', 'icons/seat.webp', nil, true),
-    seat_pside_r = generateHTML('img', 'icon', 'icons/seat.webp', nil, true)
+    seat_dside_f = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_dside_r = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_pside_f = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_pside_r = showIcon('img', 'icon', 'icons/seat.webp', nil, true)
 }
 
 local seatIndexMap = {
@@ -69,11 +69,11 @@ local function getVehiclePartIcon(partName)
     return icon
 end
 
-local function drawHTML(coords, text, id)
-    local show, x, y = GetHudScreenPositionFromWorldPosition(coords.x, coords.y, coords.z + 0.35)
-    if not show then
+local function showUI(coords, text, id)
+    local visible, x, y = GetHudScreenPositionFromWorldPosition(coords.x, coords.y, coords.z + 0.35)
+    if not visible then
         SendNUIMessage({
-            action = "show",
+            action = "visible",
             html = text,
             id = id,
             position = { x, y }
@@ -92,7 +92,7 @@ local function vehiclePartsThread()
                 if part ~= -1 then
                     local pos = GetWorldPositionOfEntityBone(vehicle, part)
                     if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                        drawHTML(pos, getVehiclePartIcon(partName), partName)
+                        showUI(pos, getVehiclePartIcon(partName), partName)
                     end
                 end
             end
@@ -101,7 +101,7 @@ local function vehiclePartsThread()
                     local part = GetEntityBoneIndexByName(vehicle, boneName)
                     if part ~= -1 then
                         local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                        drawHTML(pos, getVehiclePartIcon(partName), partName)
+                        showUI(pos, getVehiclePartIcon(partName), partName)
                     end
                 end
             end
@@ -116,10 +116,6 @@ local function vehiclePartsThread()
     end
 end
 
-local function showVehicleParts()
-    CreateThread(vehiclePartsThread)
-end
-
 local function seatPartThread()
     SendNUIMessage({ action = 'close' })
     local vehicle = GetVehiclePedIsIn(cache.ped, false)
@@ -132,8 +128,8 @@ local function seatPartThread()
                     local pos = GetWorldPositionOfEntityBone(vehicle, part)
                     if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
                         local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[seatKey])
-                        local icon = isSeatOccupied and generateHTML('img', 'icon', 'icons/seat_occupied.webp', nil, true) or seatIcon
-                        drawHTML(pos, icon, seatKey)
+                        local icon = isSeatOccupied and showIcon('img', 'icon', 'icons/seat_occupied.webp', nil, true) or seatIcon
+                        showUI(pos, icon, seatKey)
                     end
                 end
             end
@@ -144,6 +140,10 @@ local function seatPartThread()
     end
     SetNuiFocus(false, false)
     SendNUIMessage({ action = 'close' })
+end
+
+local function showVehicleParts()
+    CreateThread(vehiclePartsThread)
 end
 
 local function showSeats()
