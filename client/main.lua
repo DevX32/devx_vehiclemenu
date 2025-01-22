@@ -240,7 +240,7 @@ local function vehiclePartsThread()
         else
             nuiActive = false
         end
-        Wait(0)
+        Wait(100)
     end
     if not nuiActive then
         SetNuiFocus(false, false)
@@ -335,6 +335,7 @@ lib.onCache('vehicle', function(vehicle)
                 resetNui()
             end
         end
+        Wait(3)
     end
 end)
 
