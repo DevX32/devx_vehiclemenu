@@ -224,9 +224,7 @@ local function vehiclePartsThread()
                 if part ~= -1 then
                     local pos = GetWorldPositionOfEntityBone(vehicle, part)
                     if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                        local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[seatKey])
-                        local icon = isSeatOccupied and showIcon('img', 'icon', 'icons/seat_occupied.webp', nil, true) or seatIcon
-                        showUI(pos, icon, seatKey)
+                        showUI(pos, seatIcon, seatKey)
                     end
                 end
             end
@@ -242,7 +240,7 @@ local function vehiclePartsThread()
         else
             nuiActive = false
         end
-        Wait(100)
+        Wait(0)
     end
     if not nuiActive then
         SetNuiFocus(false, false)
@@ -337,7 +335,6 @@ lib.onCache('vehicle', function(vehicle)
                 resetNui()
             end
         end
-        Wait(3)
     end
 end)
 
