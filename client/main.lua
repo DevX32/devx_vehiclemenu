@@ -1,5 +1,5 @@
-
-local config = require('shared.config')
+local config = require 'shared.config'
+local camera = require 'client.modules.camera'
 local defaultIconStyle = "outline:none; border:none; -webkit-user-select:none; user-select:none; width:1vw; height:2vh;"
 local defaultFaIconStyle = "font-size:1.5vh;"
 
@@ -14,64 +14,9 @@ local function showIcon(tag, classes, source, style, isIcon)
     end
 end
 
-local vehicleParts = {
-    bonnet = showIcon('img', 'icon', 'icons/boot.webp', nil, true),
-    boot = showIcon('img', 'icon', 'icons/boot.webp', 'transform: scale(-1, 1)', true),
-    handle_dside_f = showIcon('img', 'icon', 'icons/door.webp', nil, true),
-    handle_dside_r = showIcon('img', 'icon', 'icons/door.webp', nil, true),
-    handle_pside_f = showIcon('img', 'icon', 'icons/door.webp', nil, true),
-    handle_pside_r = showIcon('img', 'icon', 'icons/door.webp', nil, true),
-    engine = showIcon('img', 'icon', 'icons/engine.webp', 'width:1.5vw; height:2.5vh;', true),
-    interiorLight = showIcon('i', 'far fa-lightbulb', nil, nil, false),
-    window_driver = showIcon('i', 'fas fa-sort', nil, nil, false),
-    window_passenger = showIcon('i', 'fas fa-sort', nil, nil, false),
-    window_rear_left = showIcon('i', 'fas fa-sort', nil, nil, false),
-    window_rear_right = showIcon('i', 'fas fa-sort', nil, nil, false),
-}
-
-local vehicleSeats = {
-    seat_dside_f = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
-    seat_dside_r = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
-    seat_pside_f = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
-    seat_pside_r = showIcon('img', 'icon', 'icons/seat.webp', nil, true)
-}
-
-local seatIndexMap = {
-    seat_dside_f = -1,
-    seat_pside_f = 0,
-    seat_dside_r = 1,
-    seat_pside_r = 2
-}
-
-local windowBones = {
-    window_driver = 'window_lf',
-    window_passenger = 'window_rf',
-    window_rear_left = 'window_lr',
-    window_rear_right = 'window_rr'
-}
-
-local speedConversionFactors = {
-    kmph = 3.6,
-    mph = 2.23694
-}
-
-local nuiActive = false
-local seatsUI = false
-
-local function getVehiclePartIcon(partName)
-    local icon = vehicleParts[partName] or ''
-    local vehicle = GetVehiclePedIsIn(cache.ped, false)
-    if partName == 'engine' then
-        if GetPedInVehicleSeat(vehicle, -1) ~= cache.ped then
-            icon = ''
-        end
-    end
-    return icon
-end
-
 local function showUI(coords, text, id)
-    local visible, x, y = GetHudScreenPositionFromWorldPosition(coords.x, coords.y, coords.z + 0.35)
-    if not visible then
+    local exists, x, y = GetScreenCoordFromWorldCoord(coords.x, coords.y, coords.z + 0.35)
+    if exists then
         SendNUIMessage({
             action = "visible",
             html = text,
@@ -81,73 +26,77 @@ local function showUI(coords, text, id)
     end
 end
 
-local function vehiclePartsThread()
-    while nuiActive and not seatsUI do
-        local vehicle = GetVehiclePedIsIn(cache.ped, false)
-        if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
-            local isEngineRunning = GetIsVehicleEngineRunning(vehicle)
-            local vehiclePos = GetEntityCoords(vehicle)
-            for partName, _ in pairs(vehicleParts) do
-                local part = GetEntityBoneIndexByName(vehicle, partName)
-                if part ~= -1 then
-                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                    if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                        showUI(pos, getVehiclePartIcon(partName), partName)
-                    end
-                end
-            end
-            if isEngineRunning then
-                for partName, boneName in pairs(windowBones) do
-                    local part = GetEntityBoneIndexByName(vehicle, boneName)
-                    if part ~= -1 then
-                        local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                        showUI(pos, getVehiclePartIcon(partName), partName)
-                    end
-                end
-            end
-        else
-            nuiActive = false
-        end
-        Wait(25)
-    end
-    if not seatsUI then
-        SetNuiFocus(false, false)
-        SendNUIMessage({ action = 'close' })
-    end
+local vehicleParts = {
+    bonnet = showIcon('img', 'icon', 'icons/boot.webp', nil, true),
+    boot = showIcon('img', 'icon', 'icons/boot.webp', 'transform: scale(-1, 1)', true),
+    handle_dside_f = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    handle_dside_r = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    handle_pside_f = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    handle_pside_r = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    handle_dside_r8 = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    handle_pside_r8 = showIcon('img', 'icon', 'icons/door.webp', nil, true),
+    engine = showIcon('img', 'icon', 'icons/engine.webp', 'width:1.5vw; height:2.5vh;', true),
+    interiorLight = showIcon('i', 'far fa-lightbulb', nil, nil, false),
+    window_driver = showIcon('i', 'fas fa-sort', nil, nil, false),
+    window_passenger = showIcon('i', 'fas fa-sort', nil, nil, false),
+    window_rear_left = showIcon('i', 'fas fa-sort', nil, nil, false),
+    window_rear_right = showIcon('i', 'fas fa-sort', nil, nil, false),
+    window_dside_r8 = showIcon('i', 'fas fa-sort', nil, nil, false),
+    window_pside_r8 = showIcon('i', 'fas fa-sort', nil, nil, false),
+}
+
+local vehicleSeats = {
+    seat_dside_f = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_dside_r = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_pside_f = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_pside_r = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_dside_r8 = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_pside_r8 = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_dside_r9 = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+    seat_pside_r9 = showIcon('img', 'icon', 'icons/seat.webp', nil, true),
+}
+
+local seatIndexMap = {
+    seat_dside_f = -1,
+    seat_pside_f = 0,
+    seat_dside_r = 1,
+    seat_pside_r = 2,
+    seat_dside_r8 = 17,
+    seat_pside_r8 = 18,
+    seat_dside_r9 = 19,
+    seat_pside_r9 = 20,
+}
+
+local windowBones = {
+    window_driver = 'window_lf',
+    window_passenger = 'window_rf',
+    window_rear_left = 'window_lr',
+    window_rear_right = 'window_rr',
+    window_dside_r8 = 'window_lr8',
+    window_pside_r8 = 'window_rr8',
+}
+
+local speedConversionFactors = {
+    kmph = 3.6,
+    mph = 2.23694
+}
+
+local nuiActive = false
+
+local function getVehiclePartIcon(partName)
+    local icon = vehicleParts[partName] or ''
+    return icon
 end
 
-local function seatPartThread()
-    SendNUIMessage({ action = 'close' })
-    local vehicle = GetVehiclePedIsIn(cache.ped, false)
-    while nuiActive and vehicle ~= 0 do
-        if IsPedInAnyVehicle(cache.ped, false) then
-            local vehiclePos = GetEntityCoords(vehicle)
-            for seatKey, seatIcon in pairs(vehicleSeats) do
-                local part = GetEntityBoneIndexByName(vehicle, seatKey)
-                if part ~= -1 then
-                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
-                    if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
-                        local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[seatKey])
-                        local icon = isSeatOccupied and showIcon('img', 'icon', 'icons/seat_occupied.webp', nil, true) or seatIcon
-                        showUI(pos, icon, seatKey)
-                    end
-                end
-            end
-        else
-            nuiActive = false
-        end
-        Wait(25)
+local function disableControls()
+    if nuiActive then
+        EnableControlAction(0, 1, true)
+        EnableControlAction(0, 2, true)
+    else
+        DisableControlAction(0, 1, true)
+        DisableControlAction(0, 2, true)
     end
-    SetNuiFocus(false, false)
-    SendNUIMessage({ action = 'close' })
-end
-
-local function showVehicleParts()
-    CreateThread(vehiclePartsThread)
-end
-
-local function showSeats()
-    CreateThread(seatPartThread)
+    DisableControlAction(0, 106, true)
 end
 
 local function closeVehicleDoor(part)
@@ -183,7 +132,6 @@ local function switchSeats(seatKey)
         if not isSeatOccupied then
             SetPedConfigFlag(cache.ped, 184, true)
             SetPedIntoVehicle(cache.ped, vehicle, targetSeat)
-            showSeats()
         end
     end
 end
@@ -230,39 +178,6 @@ local function indicate(type)
     TriggerServerEvent("devx_vehiclemenu:server:setIndicatorState", netId, value)
 end
 
-local function toggleNui()
-    nuiActive = true
-    SetNuiFocus(true, true)
-    SetNuiFocusKeepInput(true)
-    showVehicleParts()
-end
-
-local function resetNui()
-    nuiActive = false
-    SetNuiFocus(false, false)
-    SendNUIMessage({ action = 'close' })
-end
-
-local function disableControls()
-    if nuiActive then
-        EnableControlAction(0, 1, true)
-        EnableControlAction(0, 2, true)
-    else
-        DisableControlAction(0, 1, true)
-        DisableControlAction(0, 2, true)
-    end
-    DisableControlAction(0, 106, true)
-end
-
-local function handleSeatsUI()
-    if IsControlJustPressed(0, 25) then
-        seatsUI = true
-        showSeats()
-    elseif IsControlJustReleased(0, 25) then
-        seatsUI = false
-    end
-end
-
 AddStateBagChangeHandler("indicate", nil, function(bagName, key, data)
     local entity = GetEntityFromStateBagName(bagName)
     if entity == 0 then return end
@@ -288,6 +203,70 @@ AddStateBagChangeHandler('windowStates', nil, function(bagName, key, state)
         end
     end
 end)
+
+local function vehiclePartsThread()
+    while nuiActive do
+        local vehicle = GetVehiclePedIsIn(cache.ped, false)
+        if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
+            camera:StartCamera(vehicle)
+            local vehiclePos = GetEntityCoords(vehicle)
+            for partName, _ in pairs(vehicleParts) do
+                local part = GetEntityBoneIndexByName(vehicle, partName)
+                if part ~= -1 then
+                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                    if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
+                        showUI(pos, getVehiclePartIcon(partName), partName)
+                    end
+                end
+            end
+            for seatKey, seatIcon in pairs(vehicleSeats) do
+                local part = GetEntityBoneIndexByName(vehicle, seatKey)
+                if part ~= -1 then
+                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                    if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
+                        local isSeatOccupied = not IsVehicleSeatFree(vehicle, seatIndexMap[seatKey])
+                        local icon = isSeatOccupied and showIcon('img', 'icon', 'icons/seat_occupied.webp', nil, true) or seatIcon
+                        showUI(pos, icon, seatKey)
+                    end
+                end
+            end
+            for partName, boneName in pairs(windowBones) do
+                local part = GetEntityBoneIndexByName(vehicle, boneName)
+                if part ~= -1 then
+                    local pos = GetWorldPositionOfEntityBone(vehicle, part)
+                    if #(vehiclePos - pos) < 10 and vehiclePos ~= pos then
+                        showUI(pos, getVehiclePartIcon(partName), partName)
+                    end
+                end
+            end
+        else
+            nuiActive = false
+        end
+        Wait(100)
+    end
+    if not nuiActive then
+        SetNuiFocus(false, false)
+        SendNUIMessage({ action = 'close' })
+    end
+    camera:StopCamera()
+end
+
+local function showVehicleParts()
+    CreateThread(vehiclePartsThread)
+end
+
+local function toggleNui()
+    nuiActive = true
+    SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(true)
+    showVehicleParts()
+end
+
+local function resetNui()
+    nuiActive = false
+    SetNuiFocus(false, false)
+    SendNUIMessage({ action = 'close' })
+end
 
 RegisterKeyMapping('toggle_vehicle_menu', 'Toggle Vehicle Menu', 'keyboard', config.keyBind)
 RegisterKeyMapping('toggle_hazard_lights', 'Toggle Hazard Lights', 'keyboard', 'UP')
@@ -354,7 +333,6 @@ lib.onCache('vehicle', function(vehicle)
             if DisableMouse then
                 disableControls()
             end
-            handleSeatsUI()
             if IsControlJustPressed(0, 322) then
                 resetNui()
             end
