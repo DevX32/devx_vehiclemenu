@@ -208,6 +208,14 @@ local function vehiclePartsThread()
     while nuiActive do
         local vehicle = GetVehiclePedIsIn(cache.ped, false)
         if vehicle ~= 0 and IsPedInAnyVehicle(cache.ped, false) then
+            local vehicleSpeed = getVehicleSpeed(vehicle)
+            if vehicleSpeed > 20 then
+                nuiActive = false
+                SetNuiFocus(false, false)
+                SendNUIMessage({ action = 'close' })
+                camera:StopCamera()
+                break
+            end
             camera:StartCamera(vehicle)
             local vehiclePos = GetEntityCoords(vehicle)
             for partName, _ in pairs(vehicleParts) do
@@ -254,10 +262,16 @@ local function showVehicleParts()
 end
 
 local function toggleNui()
-    nuiActive = true
-    SetNuiFocus(true, true)
-    SetNuiFocusKeepInput(true)
-    showVehicleParts()
+    local vehicle = GetVehiclePedIsIn(cache.ped, false)
+    if IsPedInAnyVehicle(cache.ped, false) then
+        local vehicleSpeed = getVehicleSpeed(vehicle)
+        if vehicleSpeed <= 20 then
+            nuiActive = true
+            SetNuiFocus(true, true)
+            SetNuiFocusKeepInput(true)
+            showVehicleParts()
+        end
+    end
 end
 
 local function resetNui()
@@ -273,10 +287,12 @@ RegisterKeyMapping('toggle_right_indicator', 'Toggle Right Indicator', 'keyboard
 RegisterKeyMapping('close_vehicle_menu', 'Close Vehicle Menu', 'keyboard', 'BACK')
 
 RegisterCommand('toggle_vehicle_menu', function()
-    if nuiActive then
-        resetNui()
-    else
-        toggleNui()
+    if IsPedInAnyVehicle(cache.ped, false) then
+        if nuiActive then
+            resetNui()
+        else
+            toggleNui()
+        end
     end
 end, false)
 
@@ -318,25 +334,23 @@ end)
 
 lib.onCache('vehicle', function(vehicle)
     local lastVehicle = nil
-    while true do
-        if vehicle ~= lastVehicle then
-            lastVehicle = vehicle
-            if vehicle ~= 0 then
-                isEngineRunning = GetIsVehicleEngineRunning(vehicle)
-            else
-                isEngineRunning = false
-            end
+    if vehicle ~= lastVehicle then
+        lastVehicle = vehicle
+        if vehicle ~= 0 then
+            isEngineRunning = GetIsVehicleEngineRunning(vehicle)
+        else
+            isEngineRunning = false
         end
-        if nuiActive then
-            if DisableMouse then
-                disableControls()
-            end
-            if IsControlJustPressed(0, 322) then
-                resetNui()
-            end
-        end
-        Wait(3)
     end
+    if nuiActive then
+        if DisableMouse then
+            disableControls()
+        end
+        if IsControlJustPressed(0, 322) then
+            resetNui()
+        end
+    end
+    Wait(3)
 end)
 
 RegisterNetEvent('devx_vehiclemenu:client:open', function()
