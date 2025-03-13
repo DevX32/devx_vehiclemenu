@@ -1,7 +1,5 @@
 ![image](https://imgur.com/py5ph9m.png)
 
-<h2 align="center">DevX_VehicleMenu</h2>
-
 [Preview](https://www.youtube.com/watch?v=oLHex_qSobI)
 
 ## Installation Steps
