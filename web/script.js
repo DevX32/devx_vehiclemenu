@@ -5,31 +5,66 @@ function validatePosition(position) {
     ];
 }
 
+function createElement(html, id, xPos, yPos) {
+    const element = document.createElement('div');
+    element.id = id;
+    element.className = 'vehicle-icon fade-in';
+    element.style.cssText = `
+        display: none;
+        color: white;
+        position: absolute;
+        left: ${xPos * 100}vw;
+        top: ${yPos * 100}vh;
+    `;
+    element.innerHTML = html;
+    return element;
+}
+
 function showVehicleParts(data) {
     const [xPos, yPos] = validatePosition(data.position);
-    const elementId = `#${data.id}`;
-    if (!$(elementId).length) {
-        $('body').append(`
-            <p id="${data.id}" style="
-                display: none;
-                color: white;
-                position: absolute;
-                left: ${xPos * 100}vw;
-                top: ${yPos * 100}vh;">
-                ${data.html}
-            </p>`);
-        $(elementId).fadeIn(500);
+    const elementId = data.id;
+    let element = document.getElementById(elementId);
+    
+    if (!element) {
+        element = createElement(data.html, elementId, xPos, yPos);
+        document.body.appendChild(element);
+        
+        // Fade in effect
+        setTimeout(() => {
+            element.style.display = 'block';
+        }, 10);
     } else {
-        $(elementId).css({
-            left: `${xPos * 100}vw`,
-            top: `${yPos * 100}vh`
-        });
+        element.style.left = `${xPos * 100}vw`;
+        element.style.top = `${yPos * 100}vh`;
     }
-    $(elementId).off().click(function () {
-        $.post(`http://devx_vehiclemenu/VehicleMenu`, JSON.stringify({
-            id: data.id,
-        }));
+    
+    // Remove existing click listeners
+    element.replaceWith(element.cloneNode(true));
+    element = document.getElementById(elementId);
+    
+    // Add click listener
+    element.addEventListener('click', function() {
+        fetch(`http://devx_vehiclemenu/VehicleMenu`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: JSON.stringify({
+                id: data.id,
+            })
+        });
     });
+}
+
+function closeUI() {
+    document.body.innerHTML = '';
+}
+
+function removeElement(id) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.remove();
+    }
 }
 
 window.addEventListener("message", function (event) {
@@ -39,10 +74,10 @@ window.addEventListener("message", function (event) {
             showVehicleParts(data);
             break;
         case 'close':
-            $('body').html('');
+            closeUI();
             break;
         case 'bonnet':
-            $("#bonnet").remove();
+            removeElement('bonnet');
             break;
     }
 });

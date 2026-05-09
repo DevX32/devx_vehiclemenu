@@ -1,7 +1,7 @@
 fx_version 'adamant'
 game 'gta5'
 lua54 'yes'
-author 'devx32'
+author 'Devx32'
 
 shared_scripts {
     '@ox_lib/init.lua',
@@ -18,7 +18,7 @@ server_scripts {
 ui_page 'web/index.html'
 
 files {
-	'client/modules/*lua',
+	'client/modules/*.lua',
 	'shared/**/*',
 	'web/**/*',
 }

@@ -1,0 +1,73 @@
+/* DevX VehicleMenu Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    background: transparent;
+    pointer-events: none;
+}
+
+.vehicle-icon {
+    position: absolute;
+    color: white;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.vehicle-icon:hover {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+}
+
+.vehicle-icon img {
+    display: block;
+    outline: none;
+    border: none;
+    -webkit-user-select: none;
+    user-select: none;
+    width: 1vw;
+    height: 2vh;
+}
+
+.vehicle-icon i.icon {
+    font-size: 1.5vh;
+}
+
+.vehicle-icon img.engine {
+    width: 1.5vw;
+    height: 2.5vh;
+}
+
+.vehicle-icon img.door-flip {
+    transform: scale(-1, 1);
+}
+
+/* Animation for appearing icons */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .vehicle-icon img {
+        width: 2vw;
+        height: 3vh;
+    }
+    
+    .vehicle-icon i.icon {
+        font-size: 2vh;
+    }
+}
